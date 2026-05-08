@@ -1,0 +1,15 @@
+# .peavers.yml - Addon metadata for peavers.io website
+
+# Icon to display on website
+iconType: SettingsIcon
+
+# CurseForge project ID for download statistics
+curseForgeProjectId: 0
+
+# Tags for filtering and categorization
+tags:
+  - utility
+  - configuration
+
+# Gallery images
+galleryImages: []

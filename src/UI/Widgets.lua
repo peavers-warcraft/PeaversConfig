@@ -1,0 +1,3 @@
+local _, PC = ...
+
+PC.Widgets = PeaversCommons.Widgets
