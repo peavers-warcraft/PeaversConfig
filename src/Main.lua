@@ -24,6 +24,10 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         C_Timer.After(1, function()
             PC.MainFrame:Initialize()
         end)
+
+        C_Timer.After(2, function()
+            PC.EcosystemProfiles:ApplyActiveProfileOnLogin()
+        end)
     end
 end)
 

@@ -188,6 +188,28 @@ function EcosystemProfiles:SwitchProfile(name)
     return true
 end
 
+function EcosystemProfiles:ApplyActiveProfileOnLogin()
+    local activeProfile = self:GetActiveProfile()
+    if not activeProfile then return end
+
+    local registry = _G.PeaversCommons and _G.PeaversCommons.ConfigRegistry
+    if not registry then return end
+
+    local needsSwitch = false
+    for _, info in pairs(registry:GetRegisteredAddons()) do
+        if info.config and info.config.GetCurrentProfile then
+            if info.config:GetCurrentProfile() ~= activeProfile then
+                needsSwitch = true
+                break
+            end
+        end
+    end
+
+    if needsSwitch then
+        self:SwitchProfile(activeProfile)
+    end
+end
+
 -- ============================================================
 -- SPEC AUTO-SWITCH
 -- ============================================================
