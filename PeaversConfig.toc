@@ -27,3 +27,4 @@ src\UI\Sidebar.lua
 src\UI\ContentArea.lua
 src\UI\ProfilePanel.lua
 src\UI\AppearancePanel.lua
+src\UI\SupportPanel.lua

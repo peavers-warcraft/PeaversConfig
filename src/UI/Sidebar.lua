@@ -94,6 +94,7 @@ function Sidebar:Refresh()
     local sections = {
         { key = "profiles", label = "Profiles" },
         { key = "appearance", label = "Global Appearance" },
+        { key = "support", label = "Support" },
         { key = "changelog", label = "What's New" },
         { key = "about", label = "About" },
     }

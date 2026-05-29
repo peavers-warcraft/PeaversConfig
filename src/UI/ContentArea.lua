@@ -338,6 +338,8 @@ function ContentArea:ShowSection(sectionKey)
         end
     elseif sectionKey == "appearance" then
         self:ShowGlobalAppearance()
+    elseif sectionKey == "support" then
+        self:ShowSupport()
     elseif sectionKey == "changelog" then
         self:ShowChangelog()
     elseif sectionKey == "about" then
@@ -564,6 +566,20 @@ function ContentArea:ShowAbout()
     cachedPanels["_about"] = panel
     currentPanel = panel
     scrollFrame:SetScrollChild(panel)
+end
+
+function ContentArea:ShowSupport()
+    if cachedPanels["_support"] then
+        cachedPanels["_support"]:Hide()
+        cachedPanels["_support"] = nil
+    end
+
+    if PC.SupportPanel then
+        local panel = PC.SupportPanel:GetOrCreatePanel(scrollFrame)
+        cachedPanels["_support"] = panel
+        currentPanel = panel
+        scrollFrame:SetScrollChild(panel)
+    end
 end
 
 function ContentArea:ShowMessage(text)
