@@ -49,10 +49,10 @@ function SupportPanel:Refresh()
     desc:SetPoint("TOPRIGHT", -25, yPos)
     desc:SetJustifyH("LEFT")
     desc:SetSpacing(2)
-    desc:SetText("Help spread the word about Peavers addons and |cff" .. accentHex .. "wowcompare.io|r by opting in to a small promotional message in party or raid chat.")
+    desc:SetText("|cff" .. accentHex .. "wowcompare.io|r is a free tool for comparing your character's gear, stats, talents, and raid/Mythic+ performance against top players across the world. Help spread the word by opting in to a small promotional message in party or raid chat.")
     desc:SetTextColor(C.textSec[1], C.textSec[2], C.textSec[3])
     table.insert(elements, desc)
-    yPos = yPos - (desc:GetStringHeight() + 20)
+    yPos = yPos - (desc:GetStringHeight() + 35)
 
     local _, headerY = W:CreateSectionHeader(panel, "CHAT PROMOTION", leftX, yPos)
     yPos = headerY - 8
@@ -66,11 +66,11 @@ function SupportPanel:Refresh()
         checked = config.promoteInChat == true,
         width = width,
         onChange = function(checked)
-            if PeaversCommonsDB and PeaversCommonsDB.config then
-                PeaversCommonsDB.config.promoteInChat = checked
-                if PeaversCommons.Config and PeaversCommons.Config.Save then
-                    PeaversCommons.Config:Save()
-                end
+            PeaversCommonsDB = PeaversCommonsDB or {}
+            PeaversCommonsDB.config = PeaversCommonsDB.config or {}
+            PeaversCommonsDB.config.promoteInChat = checked
+            if PeaversCommons.Config and PeaversCommons.Config.Save then
+                PeaversCommons.Config:Save()
             end
         end,
     })
@@ -82,7 +82,7 @@ function SupportPanel:Refresh()
         "A short message is posted after a Mythic+ completion or a raid boss kill",
         "Sent to party chat in dungeons, raid chat in raids",
         "Maximum once every 10 minutes to avoid spam",
-        "Only you can enable or disable this \u{2014} it is never turned on automatically",
+        "Only you can enable or disable this — it is never turned on automatically",
     }
 
     for _, line in ipairs(detailLines) do
@@ -90,7 +90,7 @@ function SupportPanel:Refresh()
         bullet:SetPoint("TOPLEFT", leftX + 10, yPos)
         bullet:SetPoint("TOPRIGHT", -25, yPos)
         bullet:SetJustifyH("LEFT")
-        bullet:SetText("|cff" .. accentHex .. "\u{2022}|r  " .. line)
+        bullet:SetText("|cff" .. accentHex .. "•|r  " .. line)
         bullet:SetTextColor(C.textSec[1], C.textSec[2], C.textSec[3])
         table.insert(elements, bullet)
         yPos = yPos - 18
