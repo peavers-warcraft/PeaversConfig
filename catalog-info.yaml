@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: PeaversConfig
+  description: "Centralized configuration hub for all Peavers addons"
+  annotations:
+    github.com/project-slug: peavers-warcraft/PeaversConfig
+spec:
+  type: library
+  lifecycle: production
+  owner: peavers-warcraft
