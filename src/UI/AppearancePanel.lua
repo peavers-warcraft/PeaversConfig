@@ -36,7 +36,7 @@ function AppearancePanel:RegisterPopups()
         text = "Sync appearance from '%s' to all other addons?\n\nThis will copy font, bar texture, sizes, and background settings.",
         button1 = "Sync",
         button2 = "Cancel",
-        OnAccept = function(self, data)
+        OnAccept = function(_, data)
             AppearancePanel:SyncFromAddon(data)
         end,
         timeout = 0,

@@ -15,6 +15,8 @@ codestyle       = false
 allow_defined_top = base.allow_defined_top
 stds.wow        = base.wow
 
--- base.globals (PeaversChangelogs, SlashCmdList) + this addon's SavedVariables.
+-- base.globals (PeaversChangelogs, SlashCmdList, StaticPopupDialogs) + this addon's
+-- SavedVariables. PeaversConfig is the config manager, so it also writes the shared
+-- PeaversCommonsDB (appearance/support settings) on behalf of the ecosystem.
 globals = base.globals
-for _, g in ipairs({"PeaversConfigDB"}) do globals[#globals + 1] = g end
+for _, g in ipairs({"PeaversConfigDB", "PeaversCommonsDB"}) do globals[#globals + 1] = g end

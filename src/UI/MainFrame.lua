@@ -5,23 +5,21 @@ local MainFrame = PC.MainFrame
 
 local PeaversCommons = _G.PeaversCommons
 
-local SIDEBAR_WIDTH = 180
 local MIN_WIDTH = 650
 local MIN_HEIGHT = 450
-local HEADER_HEIGHT = 40
 
-local mainFrame = nil
+local mainFrame = nil ---@type Frame
 
 function MainFrame:Initialize()
     if mainFrame then return end
     self:CreateFrame()
 end
 
-function MainFrame:CreateFrame()
+function MainFrame.CreateFrame(_)
     local W = PC.Widgets
     local C = W.Colors
 
-    mainFrame = CreateFrame("Frame", "PeaversConfigFrame", UIParent, "BackdropTemplate")
+    mainFrame = CreateFrame("Frame", "PeaversConfigFrame", UIParent, "BackdropTemplate") --[[@as Frame]]
     mainFrame:SetFrameStrata("DIALOG")
     mainFrame:SetClampedToScreen(true)
     mainFrame:SetMovable(true)

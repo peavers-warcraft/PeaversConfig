@@ -25,7 +25,7 @@ function HeaderBar:Create(parent)
     title:SetPoint("LEFT", 16, 0)
     title:SetText("|cff" .. string.format("%02x%02x%02x",
         C.accent[1] * 255, C.accent[2] * 255, C.accent[3] * 255) .. "Peavers|r Config")
-    title:SetFont(title:GetFont(), 16)
+    title:SetFont(title:GetFont() --[[@as string]], 16)
 
     -- Version
     local version = header:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")

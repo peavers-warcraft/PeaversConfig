@@ -3,7 +3,6 @@ local _, PC = ...
 PC.ProfilePanel = {}
 local ProfilePanel = PC.ProfilePanel
 
-local PeaversCommons = _G.PeaversCommons
 
 local panel = nil
 local elements = {}
@@ -30,7 +29,7 @@ function ProfilePanel:RegisterPopups()
         text = "Delete profile '%s'?\n\nThis will remove it from all Peavers addons. This cannot be undone.",
         button1 = "Delete",
         button2 = "Cancel",
-        OnAccept = function(self, data)
+        OnAccept = function(_, data)
             PC.EcosystemProfiles:DeleteProfile(data)
             ProfilePanel:Refresh()
         end,
@@ -57,7 +56,7 @@ function ProfilePanel:RegisterPopups()
     }
 end
 
-function ProfilePanel:Refresh()
+function ProfilePanel.Refresh(_)
     if not panel then return end
 
     for _, el in ipairs(elements) do
@@ -325,7 +324,7 @@ function ProfilePanel:Refresh()
     local numSpecs = GetNumSpecializations and GetNumSpecializations() or 0
     if numSpecs > 0 then
         for i = 1, numSpecs do
-            local specID, specName, _, specIcon = GetSpecializationInfo(i)
+            local _, specName, _, specIcon = GetSpecializationInfo(i)
             if specName then
                 local assignedProfile = specConfig.specProfiles and specConfig.specProfiles[i]
                 local specIndex = i

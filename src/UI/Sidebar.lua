@@ -111,7 +111,7 @@ function Sidebar:Refresh()
     self:UpdateSelection()
 end
 
-function Sidebar:CreateButton(parent, text, yOffset, onClick)
+function Sidebar.CreateButton(_, parent, text, yOffset, onClick)
     local W = PC.Widgets
     local C = W.Colors
 

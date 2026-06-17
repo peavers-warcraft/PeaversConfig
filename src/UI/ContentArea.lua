@@ -12,10 +12,9 @@ local SCROLL_WIDTH = 6
 local SCROLL_STEP = 30
 
 local contentFrame = nil
-local tabBarFrame = nil
-local scrollFrame = nil
-local scrollChild = nil
-local scrollTrack = nil
+local scrollFrame = nil ---@type ScrollFrame
+local scrollChild = nil ---@type Frame
+local scrollTrack = nil ---@type Frame
 local scrollThumb = nil
 local cachedPanels = {}
 local cachedTabData = {}
@@ -79,7 +78,7 @@ function ContentArea:Create(parent)
     scrollChild:SetHeight(1)
     scrollFrame:SetScrollChild(scrollChild)
 
-    scrollFrame:SetScript("OnSizeChanged", function(self, width, height)
+    scrollFrame:SetScript("OnSizeChanged", function(_, width, height)
         scrollChild:SetWidth(width)
     end)
 
@@ -88,7 +87,7 @@ function ContentArea:Create(parent)
     end)
 
     -- Custom scroll track
-    scrollTrack = CreateFrame("Frame", nil, contentFrame, "BackdropTemplate")
+    scrollTrack = CreateFrame("Frame", nil, contentFrame, "BackdropTemplate") --[[@as Frame]]
     scrollTrack:SetWidth(SCROLL_WIDTH)
     scrollTrack:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", -4, -4)
     scrollTrack:SetPoint("BOTTOMRIGHT", contentFrame, "BOTTOMRIGHT", -4, 4)
@@ -372,7 +371,6 @@ function ContentArea:ShowChangelog()
         return
     end
 
-    local accentHex = string.format("%02x%02x%02x", C.accent[1] * 255, C.accent[2] * 255, C.accent[3] * 255)
     local featureHex = string.format("%02x%02x%02x", C.accent[1] * 255, C.accent[2] * 255, C.accent[3] * 255)
     local fixHex = "aaaaaa"
     local leftX = 25
@@ -415,8 +413,7 @@ function ContentArea:ShowChangelog()
         else
             for _, addon in ipairs(sortedAddons) do
                 yPos = yPos - 18
-                local header
-                header, yPos = W:CreateSectionHeader(panel, addon.name:gsub("^Peavers", "") .. "  v" .. (addon.data.version or ""), leftX, yPos)
+                _, yPos = W:CreateSectionHeader(panel, addon.name:gsub("^Peavers", "") .. "  v" .. (addon.data.version or ""), leftX, yPos)
                 yPos = yPos - 6
 
                 for _, entry in ipairs(addon.data.entries) do
@@ -486,8 +483,7 @@ function ContentArea:ShowAbout()
     yPos = yPos - (desc:GetStringHeight() + 20)
 
     -- Info section
-    local infoHeader
-    infoHeader, yPos = W:CreateSectionHeader(panel, "INFO", leftX, yPos)
+    _, yPos = W:CreateSectionHeader(panel, "INFO", leftX, yPos)
 
     yPos = yPos - 8
     local version = W:CreateLabel(panel, "Version:  |cffffffff" .. (PC.version or "1.0.0") .. "|r", { color = C.textSec })
@@ -504,8 +500,7 @@ function ContentArea:ShowAbout()
     yPos = yPos - 30
 
     -- WoWCompare section
-    local compareHeader
-    compareHeader, yPos = W:CreateSectionHeader(panel, "WOWCOMPARE", leftX, yPos)
+    _, yPos = W:CreateSectionHeader(panel, "WOWCOMPARE", leftX, yPos)
 
     yPos = yPos - 8
     local compareDesc = W:CreateLabel(panel, "Compare your raid and Mythic+ performance using real-world data", { color = C.text })
@@ -517,8 +512,7 @@ function ContentArea:ShowAbout()
     yPos = yPos - 30
 
     -- UI Vault section
-    local vaultHeader
-    vaultHeader, yPos = W:CreateSectionHeader(panel, "UI VAULT", leftX, yPos)
+    _, yPos = W:CreateSectionHeader(panel, "UI VAULT", leftX, yPos)
 
     yPos = yPos - 8
     local vaultTitle = W:CreateLabel(panel, "One-click backup and restore of all WoW addons", { color = C.text })
@@ -534,8 +528,7 @@ function ContentArea:ShowAbout()
     if Patrons and Patrons.GetSorted then
         local allPatrons = Patrons:GetSorted()
         if #allPatrons > 0 then
-            local patronHeader
-            patronHeader, yPos = W:CreateSectionHeader(panel, "PATRONS", leftX, yPos)
+            _, yPos = W:CreateSectionHeader(panel, "PATRONS", leftX, yPos)
 
             yPos = yPos - 8
             local patronLines = {}
