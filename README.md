@@ -20,6 +20,7 @@ Centralized configuration hub for all Peavers addons
 - `/peavers <addon>` - Jump directly to a specific addon's settings
 <!-- /peavers:usage -->
 
+
 ## Installation
 
 ### Recommended: PeaversUpdater
