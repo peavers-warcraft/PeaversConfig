@@ -1,5 +1,7 @@
 # PeaversConfig
 
+[![AddonSentry](https://api.addonsentry.io/api/public/repos/peavers-warcraft/PeaversConfig/badge.svg)](https://addonsentry.io/dashboard/peavers-warcraft/PeaversConfig)
+
 Centralized configuration hub for all Peavers addons
 
 ## Features
