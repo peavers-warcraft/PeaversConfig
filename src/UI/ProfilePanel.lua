@@ -75,6 +75,8 @@ function ProfilePanel.Refresh(_)
     local yPos = -20
     local leftX = 25
     local rightX = 300
+    -- Left column stops short of the right column so its rule does not run under it.
+    local colWidth = rightX - leftX - 25
 
     -- ========================================
     -- Current Profile indicator
@@ -98,7 +100,7 @@ function ProfilePanel.Refresh(_)
     -- COLUMN 1: Profile List (left side)
     -- ========================================
 
-    local _, headerY = W:CreateSectionHeader(panel, "AVAILABLE PROFILES", leftX, yPos)
+    local _, headerY = W:CreateSectionHeader(panel, "AVAILABLE PROFILES", leftX, yPos, { width = colWidth })
     yPos = headerY - 5
     -- Store in elements for cleanup
     table.insert(elements, _)
@@ -192,7 +194,7 @@ function ProfilePanel.Refresh(_)
     -- Create New Profile
     -- ========================================
 
-    local _, createHeaderY = W:CreateSectionHeader(panel, "CREATE NEW PROFILE", leftX, yPos)
+    local _, createHeaderY = W:CreateSectionHeader(panel, "CREATE NEW PROFILE", leftX, yPos, { width = colWidth })
     yPos = createHeaderY - 5
     table.insert(elements, _)
 
@@ -250,7 +252,7 @@ function ProfilePanel.Refresh(_)
 
     local actionY = -85 -- Offset below the current profile panel
 
-    local _, actHeaderY = W:CreateSectionHeader(panel, "PROFILE ACTIONS", rightX, actionY)
+    local _, actHeaderY = W:CreateSectionHeader(panel, "PROFILE ACTIONS", rightX, actionY, { rightInset = 25 })
     actionY = actHeaderY - 8
     table.insert(elements, _)
 
@@ -291,7 +293,7 @@ function ProfilePanel.Refresh(_)
     -- Auto-Switch by Spec
     -- ========================================
 
-    local _, specHeaderY = W:CreateSectionHeader(panel, "AUTO-SWITCH BY SPEC", rightX, actionY)
+    local _, specHeaderY = W:CreateSectionHeader(panel, "AUTO-SWITCH BY SPEC", rightX, actionY, { rightInset = 25 })
     actionY = specHeaderY - 5
     table.insert(elements, _)
 

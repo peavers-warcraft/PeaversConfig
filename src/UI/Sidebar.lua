@@ -4,6 +4,7 @@ PC.Sidebar = {}
 local Sidebar = PC.Sidebar
 
 local PeaversCommons = _G.PeaversCommons
+local Theme = PeaversCommons.Theme
 
 local SIDEBAR_WIDTH = 180
 local HEADER_HEIGHT = 40
@@ -27,7 +28,9 @@ function Sidebar:Create(parent)
     sidebarFrame:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
     })
-    sidebarFrame:SetBackdropColor(C.bgNested[1], C.bgNested[2], C.bgNested[3], 1)
+    -- Flat paper, same as the content area; the right hairline is what separates
+    -- them. This is the site's structural device rather than a tinted panel.
+    sidebarFrame:SetBackdropColor(C.bgBase[1], C.bgBase[2], C.bgBase[3], 1)
 
     -- Right border
     local rightBorder = sidebarFrame:CreateTexture(nil, "ARTWORK")
@@ -62,11 +65,17 @@ function Sidebar:Refresh()
     local yOffset = -10
     local addons = PeaversCommons.ConfigRegistry:GetSortedAddons()
 
-    -- Addon section header
-    local addonHeader = sidebarFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-    addonHeader:SetPoint("TOPLEFT", 12, yOffset)
-    addonHeader:SetText("ADDONS")
-    addonHeader:SetTextColor(C.textMuted[1], C.textMuted[2], C.textMuted[3])
+    -- Addon section header, as an indigo eyebrow matching the content panes.
+    local addonHeader
+    if Theme.UsesCustomFonts() then
+        addonHeader = Theme.TrackedLabel(sidebarFrame, "ADDONS", 10, C.eyebrow)
+        addonHeader:SetPoint("TOPLEFT", 12, yOffset)
+    else
+        addonHeader = sidebarFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+        addonHeader:SetPoint("TOPLEFT", 12, yOffset)
+        addonHeader:SetText("ADDONS")
+        addonHeader:SetTextColor(unpack(C.eyebrow))
+    end
     table.insert(decorations, addonHeader)
     yOffset = yOffset - 18
 
@@ -86,7 +95,7 @@ function Sidebar:Refresh()
     sep:SetPoint("TOPLEFT", 12, yOffset)
     sep:SetPoint("TOPRIGHT", -12, yOffset)
     sep:SetHeight(1)
-    sep:SetColorTexture(C.border[1], C.border[2], C.border[3], 0.5)
+    sep:SetColorTexture(C.border[1], C.border[2], C.border[3], 1)
     table.insert(decorations, sep)
     yOffset = yOffset - SECTION_SPACING
 
@@ -132,17 +141,16 @@ function Sidebar.CreateButton(_, parent, text, yOffset, onClick)
     selectedBg:Hide()
     btn.selectedBg = selectedBg
 
-    -- Left accent bar for selected state
+    -- Active marker: the site's indigo dot, replacing the 3px left accent bar.
     local accentBar = btn:CreateTexture(nil, "OVERLAY")
-    accentBar:SetPoint("TOPLEFT", 0, 0)
-    accentBar:SetPoint("BOTTOMLEFT", 0, 0)
-    accentBar:SetWidth(3)
-    accentBar:SetColorTexture(C.accent[1], C.accent[2], C.accent[3], 1)
+    accentBar:SetPoint("LEFT", 8, 0)
+    Theme.Dot(accentBar, 5, C.accent)
     accentBar:Hide()
     btn.accentBar = accentBar
 
     local label = btn:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    label:SetPoint("LEFT", 12, 0)
+    -- Indented past the dot so the label does not shift on selection.
+    label:SetPoint("LEFT", 20, 0)
     label:SetText(text)
     label:SetJustifyH("LEFT")
     label:SetTextColor(C.textSec[1], C.textSec[2], C.textSec[3])
