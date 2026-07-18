@@ -4,6 +4,7 @@ PC.SupportPanel = {}
 local SupportPanel = PC.SupportPanel
 
 local PeaversCommons = _G.PeaversCommons
+local Theme = PeaversCommons.Theme
 
 local panel = nil
 local elements = {}
@@ -37,9 +38,9 @@ function SupportPanel:Refresh()
     local C = W.Colors
     local leftX = 25
     local yPos = -20
-    local accentHex = string.format("%02x%02x%02x", C.accent[1] * 255, C.accent[2] * 255, C.accent[3] * 255)
+    local accentHex = Theme.Hex(C.accent)
 
-    local title = W:CreateLabel(panel, "Support Peavers", { color = C.gold, size = 20, outline = "OUTLINE" })
+    local title = W:CreateLabel(panel, "Support Peavers", { color = C.text, size = 20 })
     title:SetPoint("TOPLEFT", leftX, yPos)
     table.insert(elements, title)
     yPos = yPos - 28

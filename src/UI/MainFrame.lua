@@ -31,7 +31,7 @@ function MainFrame.CreateFrame(_)
     mainFrame:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
+        edgeSize = 1,
     })
     mainFrame:SetBackdropColor(C.bgBase[1], C.bgBase[2], C.bgBase[3], C.bgBase[4])
     mainFrame:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], 1)

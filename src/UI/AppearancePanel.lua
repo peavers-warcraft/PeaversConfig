@@ -4,6 +4,7 @@ PC.AppearancePanel = {}
 local AppearancePanel = PC.AppearancePanel
 
 local PeaversCommons = _G.PeaversCommons
+local Theme = PeaversCommons.Theme
 
 local panel = nil
 local elements = {}
@@ -128,7 +129,7 @@ function AppearancePanel:Refresh()
     -- Title
     -- ========================================
 
-    local title = W:CreateLabel(panel, "Global Appearance", { color = C.gold, size = 20, outline = "OUTLINE" })
+    local title = W:CreateLabel(panel, "Global Appearance", { color = C.text, size = 20 })
     title:SetPoint("TOPLEFT", leftX, yPos)
     table.insert(elements, title)
     yPos = yPos - 28
@@ -159,10 +160,13 @@ function AppearancePanel:Refresh()
 
     for _, addonInfo in ipairs(addons) do
         if addonInfo.config then
-            local row = W:CreatePanel(panel, { bg = C.bgNested })
+            -- Hairline-separated row on flat paper rather than a filled card:
+            -- the site builds lists as cells in a hairline grid.
+            local row = CreateFrame("Frame", nil, panel)
             row:SetPoint("TOPLEFT", leftX, yPos)
             row:SetPoint("TOPRIGHT", -25, yPos)
             row:SetHeight(36)
+            Theme.Hairline(row, "BOTTOM")
             table.insert(elements, row)
 
             local nameText = W:CreateLabel(row, addonInfo.displayName or addonInfo.name, { color = C.text })
@@ -176,8 +180,10 @@ function AppearancePanel:Refresh()
 
             local addonName = addonInfo.name
             local displayName = addonInfo.displayName or addonInfo.name
+            -- Secondary: primary (near-white) is reserved for a single main
+            -- action, not a per-row control repeated down a list.
             local syncBtn = W:CreateButton(row, "Sync to All", {
-                variant = "primary",
+                variant = "secondary",
                 width = 90,
                 height = 22,
                 onClick = function()
@@ -214,8 +220,7 @@ function AppearancePanel:Refresh()
     for _, item in ipairs(syncItems) do
         local bullet = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
         bullet:SetPoint("TOPLEFT", leftX + 10, yPos)
-        bullet:SetText("|cff" .. string.format("%02x%02x%02x",
-            C.accent[1] * 255, C.accent[2] * 255, C.accent[3] * 255) .. "•|r  " .. item)
+        bullet:SetText(Theme.Colorize(C.accent, "•") .. "  " .. item)
         bullet:SetTextColor(C.textSec[1], C.textSec[2], C.textSec[3])
         table.insert(elements, bullet)
         yPos = yPos - 18

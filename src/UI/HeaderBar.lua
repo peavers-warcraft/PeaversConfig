@@ -3,6 +3,9 @@ local _, PC = ...
 PC.HeaderBar = {}
 local HeaderBar = PC.HeaderBar
 
+local PeaversCommons = _G.PeaversCommons
+local Theme = PeaversCommons.Theme
+
 local HEADER_HEIGHT = 40
 
 function HeaderBar:Create(parent)
@@ -23,8 +26,10 @@ function HeaderBar:Create(parent)
     -- Title
     local title = header:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
     title:SetPoint("LEFT", 16, 0)
-    title:SetText("|cff" .. string.format("%02x%02x%02x",
-        C.accent[1] * 255, C.accent[2] * 255, C.accent[3] * 255) .. "Peavers|r Config")
+    title:SetText(Theme.Colorize(C.accent, "Peavers") .. " Config")
+    -- GameFontNormalLarge is gold by default, so the uncoloured half of the
+    -- wordmark inherits gold unless the base colour is set explicitly.
+    title:SetTextColor(unpack(C.text))
     title:SetFont(title:GetFont() --[[@as string]], 16)
 
     -- Version

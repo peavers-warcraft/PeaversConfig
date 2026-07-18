@@ -4,6 +4,7 @@ PC.ContentArea = {}
 local ContentArea = PC.ContentArea
 
 local PeaversCommons = _G.PeaversCommons
+local Theme = PeaversCommons.Theme
 
 local SIDEBAR_WIDTH = 180
 local HEADER_HEIGHT = 40
@@ -67,7 +68,8 @@ function ContentArea:Create(parent)
     contentFrame:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
     })
-    contentFrame:SetBackdropColor(C.bgBase[1], C.bgBase[2], C.bgBase[3], 0.6)
+    -- Fully opaque: content sits on flat paper, not a tinted wash over the window.
+    contentFrame:SetBackdropColor(C.bgBase[1], C.bgBase[2], C.bgBase[3], 1)
 
     scrollFrame = CreateFrame("ScrollFrame", "PeaversConfigScrollFrame", contentFrame)
     scrollFrame:SetPoint("TOPLEFT", 4, -4)
@@ -94,7 +96,8 @@ function ContentArea:Create(parent)
     scrollTrack:SetBackdrop({
         bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
     })
-    scrollTrack:SetBackdropColor(0.1, 0.1, 0.12, 1)
+    -- Transparent track, as on the site; only the thumb is visible.
+    scrollTrack:SetBackdropColor(0, 0, 0, 0)
 
     -- Custom scroll thumb
     scrollThumb = CreateFrame("Frame", nil, scrollTrack, "BackdropTemplate")
@@ -104,14 +107,14 @@ function ContentArea:Create(parent)
     scrollThumb:SetBackdrop({
         bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
     })
-    scrollThumb:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], C.accent[4])
+    scrollThumb:SetBackdropColor(unpack(C.scrollThumb))
     scrollThumb:EnableMouse(true)
 
     scrollThumb:SetScript("OnEnter", function(thumb)
-        thumb:SetBackdropColor(C.accentHover[1], C.accentHover[2], C.accentHover[3], C.accentHover[4])
+        thumb:SetBackdropColor(1, 1, 1, 0.30)
     end)
     scrollThumb:SetScript("OnLeave", function(thumb)
-        thumb:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], C.accent[4])
+        thumb:SetBackdropColor(unpack(C.scrollThumb))
     end)
 
     -- Mouse wheel scrolling
@@ -371,7 +374,7 @@ function ContentArea:ShowChangelog()
         return
     end
 
-    local featureHex = string.format("%02x%02x%02x", C.accent[1] * 255, C.accent[2] * 255, C.accent[3] * 255)
+    local featureHex = Theme.Hex(C.accent)
     local fixHex = "aaaaaa"
     local leftX = 25
     local yPos = -20
@@ -382,8 +385,7 @@ function ContentArea:ShowChangelog()
 
     local title = W:CreateLabel(panel, "What's New", {
         size = 20,
-        outline = "OUTLINE",
-        color = C.gold,
+        color = C.text,
     })
     title:SetPoint("TOPLEFT", leftX, yPos)
     yPos = yPos - 10
@@ -456,7 +458,7 @@ function ContentArea:ShowAbout()
         return
     end
 
-    local accentHex = string.format("%02x%02x%02x", C.accent[1] * 255, C.accent[2] * 255, C.accent[3] * 255)
+    local accentHex = Theme.Hex(C.accent)
     local leftX = 25
     local yPos = -20
 
@@ -467,8 +469,7 @@ function ContentArea:ShowAbout()
     -- Title
     local title = W:CreateLabel(panel, "|cff" .. accentHex .. "Peavers|r Addons", {
         size = 20,
-        outline = "OUTLINE",
-        color = C.gold,
+        color = C.text,
     })
     title:SetPoint("TOPLEFT", leftX, yPos)
     yPos = yPos - 28
