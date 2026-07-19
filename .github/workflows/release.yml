@@ -12,7 +12,40 @@ permissions:
   id-token: write
 
 jobs:
+  # Refresh the bundled addon catalog (src/Core/AddonCatalog.lua) from the
+  # live addons.peavers.io data before every release. The shared release job
+  # rebases onto master before tagging and packaging, so a commit pushed here
+  # is included in the released zip.
+  update-catalog:
+    runs-on: warcraft-runners
+    steps:
+      - name: Mint GitHub App token (Vault OIDC)
+        id: ghtoken
+        uses: peavers/.github/actions/gh-app-token@main
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          token: ${{ steps.ghtoken.outputs.token }}
+
+      - name: Regenerate addon catalog
+        run: bash scripts/update-catalog.sh
+
+      - name: Commit and push if changed
+        run: |
+          if git diff --quiet -- src/Core/AddonCatalog.lua; then
+            echo "Catalog unchanged, nothing to commit"
+            exit 0
+          fi
+          git config user.name "Chris Turner"
+          git config user.email "peavers@gmail.com"
+          git add src/Core/AddonCatalog.lua
+          git commit -m "chore: refresh bundled addon catalog [skip ci]"
+          git push origin master
+
   release:
+    needs: update-catalog
     uses: peavers-code/peavers-warcraft-workflows/.github/workflows/release.yml@master
     with:
       toc_file: PeaversConfig.toc
