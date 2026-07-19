@@ -10,12 +10,45 @@ local SIDEBAR_WIDTH = 180
 local HEADER_HEIGHT = 40
 local ITEM_HEIGHT = 28
 local SECTION_SPACING = 10
+local SCROLL_WIDTH = 6
+local SCROLL_STEP = 30
 
 local sidebarFrame = nil
+local scrollFrame = nil ---@type ScrollFrame
+local scrollChild = nil ---@type Frame
+local scrollTrack = nil ---@type Frame
+local scrollThumb = nil
 local selectedAddon = nil
 local selectedSection = nil
 local buttons = {}
 local decorations = {}
+
+local function UpdateScrollThumb()
+    if not scrollTrack or not scrollThumb then return end
+
+    local contentHeight = scrollChild:GetHeight() or 1
+    local frameHeight = scrollFrame:GetHeight() or 1
+    local trackHeight = scrollTrack:GetHeight() or 1
+
+    if contentHeight <= frameHeight then
+        scrollThumb:Hide()
+        scrollTrack:Hide()
+        return
+    end
+
+    scrollTrack:Show()
+    scrollThumb:Show()
+
+    local thumbHeight = math.max(20, (frameHeight / contentHeight) * trackHeight)
+    scrollThumb:SetHeight(thumbHeight)
+
+    local maxScroll = contentHeight - frameHeight
+    local scrollPercent = scrollFrame:GetVerticalScroll() / maxScroll
+    local thumbOffset = scrollPercent * (trackHeight - thumbHeight)
+
+    scrollThumb:ClearAllPoints()
+    scrollThumb:SetPoint("TOP", scrollTrack, "TOP", 0, -thumbOffset)
+end
 
 function Sidebar:Create(parent)
     local W = PC.Widgets
@@ -38,6 +71,107 @@ function Sidebar:Create(parent)
     rightBorder:SetPoint("BOTTOMRIGHT", 0, 0)
     rightBorder:SetWidth(1)
     rightBorder:SetColorTexture(C.border[1], C.border[2], C.border[3], 1)
+
+    scrollFrame = CreateFrame("ScrollFrame", nil, sidebarFrame)
+    scrollFrame:SetPoint("TOPLEFT", 0, 0)
+    scrollFrame:SetPoint("BOTTOMRIGHT", -1, 0)
+
+    scrollChild = CreateFrame("Frame", nil, scrollFrame)
+    scrollChild:SetWidth(scrollFrame:GetWidth())
+    scrollChild:SetHeight(1)
+    scrollFrame:SetScrollChild(scrollChild)
+
+    scrollFrame:SetScript("OnSizeChanged", function(_, width)
+        scrollChild:SetWidth(width)
+        UpdateScrollThumb()
+    end)
+
+    scrollFrame:SetScript("OnScrollRangeChanged", function()
+        UpdateScrollThumb()
+    end)
+
+    -- Custom scroll track and thumb, matching the content area's.
+    scrollTrack = CreateFrame("Frame", nil, sidebarFrame, "BackdropTemplate") --[[@as Frame]]
+    scrollTrack:SetWidth(SCROLL_WIDTH)
+    scrollTrack:SetPoint("TOPRIGHT", sidebarFrame, "TOPRIGHT", -3, -4)
+    scrollTrack:SetPoint("BOTTOMRIGHT", sidebarFrame, "BOTTOMRIGHT", -3, 4)
+    scrollTrack:SetBackdrop({
+        bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+    })
+    scrollTrack:SetBackdropColor(0, 0, 0, 0)
+    -- Above the buttons inside the scroll child, so the thumb stays visible
+    -- and clickable over them.
+    scrollTrack:SetFrameLevel(sidebarFrame:GetFrameLevel() + 10)
+
+    scrollThumb = CreateFrame("Frame", nil, scrollTrack, "BackdropTemplate")
+    scrollThumb:SetWidth(SCROLL_WIDTH)
+    scrollThumb:SetHeight(40)
+    scrollThumb:SetPoint("TOP", scrollTrack, "TOP", 0, 0)
+    scrollThumb:SetBackdrop({
+        bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+    })
+    scrollThumb:SetBackdropColor(unpack(C.scrollThumb))
+    scrollThumb:EnableMouse(true)
+
+    scrollThumb:SetScript("OnEnter", function(thumb)
+        thumb:SetBackdropColor(1, 1, 1, 0.30)
+    end)
+    scrollThumb:SetScript("OnLeave", function(thumb)
+        thumb:SetBackdropColor(unpack(C.scrollThumb))
+    end)
+
+    sidebarFrame:EnableMouseWheel(true)
+    sidebarFrame:SetScript("OnMouseWheel", function(_, delta)
+        local maxScroll = scrollFrame:GetVerticalScrollRange()
+        local currentScroll = scrollFrame:GetVerticalScroll()
+        local newScroll = math.max(0, math.min(maxScroll, currentScroll - (delta * SCROLL_STEP)))
+        scrollFrame:SetVerticalScroll(newScroll)
+        UpdateScrollThumb()
+    end)
+
+    -- Thumb dragging — fullscreen overlay captures the mouse even when the
+    -- cursor leaves the thumb mid-drag.
+    local isDragging = false
+    local dragStartY = 0
+    local dragStartScroll = 0
+
+    local dragOverlay = CreateFrame("Frame", nil, UIParent)
+    dragOverlay:SetAllPoints(UIParent)
+    dragOverlay:SetFrameStrata("TOOLTIP")
+    dragOverlay:EnableMouse(true)
+    dragOverlay:Hide()
+
+    dragOverlay:SetScript("OnMouseUp", function(_, button)
+        if button == "LeftButton" then
+            isDragging = false
+            dragOverlay:Hide()
+        end
+    end)
+
+    dragOverlay:SetScript("OnUpdate", function()
+        if not isDragging then return end
+        local currentY = select(2, GetCursorPosition()) / UIParent:GetEffectiveScale()
+        local deltaY = dragStartY - currentY
+
+        local contentHeight = scrollChild:GetHeight() or 1
+        local frameHeight = scrollFrame:GetHeight() or 1
+        local trackHeight = scrollTrack:GetHeight() or 1
+        local maxScroll = math.max(0, contentHeight - frameHeight)
+
+        local scrollRatio = maxScroll / math.max(1, trackHeight - scrollThumb:GetHeight())
+        local newScroll = math.max(0, math.min(maxScroll, dragStartScroll + (deltaY * scrollRatio)))
+        scrollFrame:SetVerticalScroll(newScroll)
+        UpdateScrollThumb()
+    end)
+
+    scrollThumb:SetScript("OnMouseDown", function(_, button)
+        if button == "LeftButton" then
+            isDragging = true
+            dragStartY = select(2, GetCursorPosition()) / UIParent:GetEffectiveScale()
+            dragStartScroll = scrollFrame:GetVerticalScroll()
+            dragOverlay:Show()
+        end
+    end)
 
     self.frame = sidebarFrame
     self:Refresh()
@@ -68,10 +202,10 @@ function Sidebar:Refresh()
     -- Addon section header, as an indigo eyebrow matching the content panes.
     local addonHeader
     if Theme.UsesCustomFonts() then
-        addonHeader = Theme.TrackedLabel(sidebarFrame, "ADDONS", 10, C.eyebrow)
+        addonHeader = Theme.TrackedLabel(scrollChild, "ADDONS", 10, C.eyebrow)
         addonHeader:SetPoint("TOPLEFT", 12, yOffset)
     else
-        addonHeader = sidebarFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+        addonHeader = scrollChild:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
         addonHeader:SetPoint("TOPLEFT", 12, yOffset)
         addonHeader:SetText("ADDONS")
         addonHeader:SetTextColor(unpack(C.eyebrow))
@@ -81,7 +215,7 @@ function Sidebar:Refresh()
 
     -- Addon buttons
     for _, info in ipairs(addons) do
-        local btn = self:CreateButton(sidebarFrame, info.displayName, yOffset, function()
+        local btn = self:CreateButton(scrollChild, info.displayName, yOffset, function()
             self:Select(info.name)
         end)
         btn.addonName = info.name
@@ -91,7 +225,7 @@ function Sidebar:Refresh()
 
     -- Separator
     yOffset = yOffset - SECTION_SPACING
-    local sep = sidebarFrame:CreateTexture(nil, "ARTWORK")
+    local sep = scrollChild:CreateTexture(nil, "ARTWORK")
     sep:SetPoint("TOPLEFT", 12, yOffset)
     sep:SetPoint("TOPRIGHT", -12, yOffset)
     sep:SetHeight(1)
@@ -109,13 +243,22 @@ function Sidebar:Refresh()
     }
 
     for _, sec in ipairs(sections) do
-        local btn = self:CreateButton(sidebarFrame, sec.label, yOffset, function()
+        local btn = self:CreateButton(scrollChild, sec.label, yOffset, function()
             self:SelectSection(sec.key)
         end)
         btn.sectionKey = sec.key
         buttons["_section_" .. sec.key] = btn
         yOffset = yOffset - ITEM_HEIGHT
     end
+
+    scrollChild:SetHeight(-yOffset + 10)
+
+    -- Clamp in case the list shrank while scrolled down.
+    local maxScroll = scrollFrame:GetVerticalScrollRange()
+    if scrollFrame:GetVerticalScroll() > maxScroll then
+        scrollFrame:SetVerticalScroll(maxScroll)
+    end
+    UpdateScrollThumb()
 
     self:UpdateSelection()
 end
