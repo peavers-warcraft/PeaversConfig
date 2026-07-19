@@ -338,6 +338,8 @@ function ContentArea:ShowSection(sectionKey)
             currentPanel = panel
             scrollFrame:SetScrollChild(panel)
         end
+    elseif sectionKey == "browse" then
+        self:ShowBrowse()
     elseif sectionKey == "appearance" then
         self:ShowGlobalAppearance()
     elseif sectionKey == "support" then
@@ -560,6 +562,21 @@ function ContentArea:ShowAbout()
     cachedPanels["_about"] = panel
     currentPanel = panel
     scrollFrame:SetScrollChild(panel)
+end
+
+function ContentArea:ShowBrowse()
+    if cachedPanels["_browse"] then
+        cachedPanels["_browse"]:Hide()
+        cachedPanels["_browse"] = nil
+    end
+
+    if PC.AddonsPanel then
+        local panel = PC.AddonsPanel:GetOrCreatePanel(scrollFrame)
+        cachedPanels["_browse"] = panel
+        currentPanel = panel
+        scrollFrame:SetScrollChild(panel)
+        scrollFrame:SetVerticalScroll(0)
+    end
 end
 
 function ContentArea:ShowSupport()

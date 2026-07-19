@@ -235,6 +235,7 @@ function Sidebar:Refresh()
 
     -- Fixed section buttons
     local sections = {
+        { key = "browse", label = "All Addons" },
         { key = "profiles", label = "Profiles" },
         { key = "appearance", label = "Global Appearance" },
         { key = "support", label = "Support" },
