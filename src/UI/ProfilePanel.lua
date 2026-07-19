@@ -311,7 +311,7 @@ function ProfilePanel.Refresh(_)
     end
     local specConfig = _G.PeaversConfigDB.specAutoSwitch
 
-    local specToggle = W:CreateToggle(panel, "Enable Spec Auto-Switch", {
+    local specToggle = W:CreateCheckbox(panel, "Enable Spec Auto-Switch", {
         checked = specConfig.enabled,
         width = 240,
         onChange = function(checked)
