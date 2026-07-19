@@ -63,7 +63,7 @@ function SupportPanel:Refresh()
     if width < 100 then width = 360 end
 
     local config = PeaversCommonsDB and PeaversCommonsDB.config or {}
-    local toggle = W:CreateToggle(panel, "Promote wowcompare.io in party/raid chat", {
+    local toggle = W:CreateCheckbox(panel, "Promote wowcompare.io in party/raid chat", {
         checked = config.promoteInChat == true,
         width = width,
         onChange = function(checked)
