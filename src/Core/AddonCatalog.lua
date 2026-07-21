@@ -4,7 +4,7 @@
 local _, PC = ...
 
 PC.AddonCatalog = {
-    generatedAt = "2026-07-19T13:47:32Z",
+    generatedAt = "2026-07-21T01:28:40Z",
     addons = {
         {
             folder = "BetterTogether",
@@ -125,6 +125,12 @@ PC.AddonCatalog = {
             name = "Peavers Remembers You",
             description = "Records players you group with and notifies you when you meet them again",
             tags = { "raid", "party", "group" },
+        },
+        {
+            folder = "PeaversScaler",
+            name = "Peavers Scaler",
+            description = "Scale the entire WoW UI with presets, a freeform slider, and pixel-perfect mode",
+            tags = { "interface", "scaling", "quality-of-life" },
         },
         {
             folder = "PeaversSystemBars",
