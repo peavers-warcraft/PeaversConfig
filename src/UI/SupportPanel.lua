@@ -50,7 +50,7 @@ function SupportPanel:Refresh()
     desc:SetPoint("TOPRIGHT", -25, yPos)
     desc:SetJustifyH("LEFT")
     desc:SetSpacing(2)
-    desc:SetText("|cff" .. accentHex .. "wowcompare.io|r is a free tool for comparing your character's gear, stats, talents, and raid/Mythic+ performance against top players across the world. Help spread the word by opting in to a small promotional message in party or raid chat.")
+    desc:SetText("|cff" .. accentHex .. "parses.gg|r is a free and open combat-logging platform for World of Warcraft — every fight is public by default, every read needs no API key, and the whole dataset can be downloaded by anyone. Help spread the word by opting in to a small promotional message in party or raid chat.")
     desc:SetTextColor(C.textSec[1], C.textSec[2], C.textSec[3])
     table.insert(elements, desc)
     yPos = yPos - (desc:GetStringHeight() + 35)
@@ -63,7 +63,7 @@ function SupportPanel:Refresh()
     if width < 100 then width = 360 end
 
     local config = PeaversCommonsDB and PeaversCommonsDB.config or {}
-    local toggle = W:CreateCheckbox(panel, "Promote wowcompare.io in party/raid chat", {
+    local toggle = W:CreateCheckbox(panel, "Promote parses.gg in party/raid chat", {
         checked = config.promoteInChat == true,
         width = width,
         onChange = function(checked)

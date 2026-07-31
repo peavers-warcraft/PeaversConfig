@@ -502,16 +502,16 @@ function ContentArea:ShowAbout()
     countLabel:SetPoint("TOPLEFT", leftX, yPos)
     yPos = yPos - 30
 
-    -- WoWCompare section
-    _, yPos = W:CreateSectionHeader(panel, "WOWCOMPARE", leftX, yPos)
+    -- parses.gg section
+    _, yPos = W:CreateSectionHeader(panel, "PARSES.GG", leftX, yPos)
 
     yPos = yPos - 8
-    local compareDesc = W:CreateLabel(panel, "Compare your raid and Mythic+ performance using real-world data", { color = C.text })
-    compareDesc:SetPoint("TOPLEFT", leftX, yPos)
+    local parsesDesc = W:CreateLabel(panel, "Open combat logs - every fight public, no API keys, dataset free to download", { color = C.text })
+    parsesDesc:SetPoint("TOPLEFT", leftX, yPos)
     yPos = yPos - 18
 
-    local compareUrl = W:CreateLabel(panel, "Try it at |cff" .. accentHex .. "wowcompare.io|r", { color = C.textSec })
-    compareUrl:SetPoint("TOPLEFT", leftX, yPos)
+    local parsesUrl = W:CreateLabel(panel, "Try it at |cff" .. accentHex .. "parses.gg|r", { color = C.textSec })
+    parsesUrl:SetPoint("TOPLEFT", leftX, yPos)
     yPos = yPos - 30
 
     -- UI Vault section
