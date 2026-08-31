@@ -4,7 +4,7 @@
 local _, PC = ...
 
 PC.AddonCatalog = {
-    generatedAt = "2026-08-11T22:50:38Z",
+    generatedAt = "2026-08-31T02:30:16Z",
     addons = {
         {
             folder = "BetterTogether",
@@ -133,6 +133,18 @@ PC.AddonCatalog = {
             tags = { "interface", "scaling", "quality-of-life" },
         },
         {
+            folder = "PeaversSplits",
+            name = "Peavers Splits",
+            description = "Call out how far ahead or behind the pace your keystone is, at every boss",
+            tags = { "mythic-plus", "keystone", "splits", "pace", "dungeon" },
+        },
+        {
+            folder = "PeaversSplitsData",
+            name = "Peavers Splits Data",
+            description = "Benchmark keystone boss splits for PeaversSplits and others",
+            tags = { "mythic-plus", "keystone", "splits", "data", "library" },
+        },
+        {
             folder = "PeaversSystemBars",
             name = "Peavers System Bars",
             description = "Displays FPS and latency as visual status bars",
@@ -149,6 +161,12 @@ PC.AddonCatalog = {
             name = "Peavers Talents Data",
             description = "Datasource for PeaversTalents and others",
             tags = { "talents", "data", "library" },
+        },
+        {
+            folder = "PeaversUnitFrames",
+            name = "Peavers Unit Frames",
+            description = "Clean player, target, target of target and focus frames with cast bars and auras",
+            tags = { "interface", "unit-frames", "combat" },
         },
     },
 }
