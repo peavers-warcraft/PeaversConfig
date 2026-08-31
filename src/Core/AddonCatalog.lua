@@ -141,7 +141,7 @@ PC.AddonCatalog = {
         {
             folder = "PeaversTalents",
             name = "Peavers Talents",
-            description = "Pick the latest talent builds from wowcompare.io.",
+            description = "Pick the latest talent builds from parses.gg.",
             tags = { "talents" },
         },
         {
