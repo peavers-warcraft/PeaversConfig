@@ -217,8 +217,15 @@ end
 function EcosystemProfiles:SetupSpecAutoSwitch()
     if self.specFrame then return end
 
+    -- Nothing to switch on a client without specializations - and registering
+    -- their event there is a hard error that would stop PeaversConfig loading.
+    local Compat = _G.PeaversCommons and _G.PeaversCommons.Compat
+    if not (GetSpecialization and GetSpecializationInfo) then return end
+
     self.specFrame = CreateFrame("Frame")
-    self.specFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+    if not Compat or Compat.IsEventValid("PLAYER_SPECIALIZATION_CHANGED") then
+        self.specFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+    end
     self.specFrame:SetScript("OnEvent", function(_, _, unit)
         if unit == "player" or not unit then
             self:CheckSpecAutoSwitch()
