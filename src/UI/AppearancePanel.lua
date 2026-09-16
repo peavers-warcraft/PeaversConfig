@@ -4,10 +4,12 @@ PC.AppearancePanel = {}
 local AppearancePanel = PC.AppearancePanel
 
 local PeaversCommons = _G.PeaversCommons
-local Theme = PeaversCommons.Theme
+local Style = PC.Style
 
 local panel = nil
-local elements = {}
+local content = nil
+
+local INSET = Style.Pad.content
 
 local SYNC_KEYS = {
     "barHeight", "barSpacing", "barAlpha", "barBgAlpha", "textAlpha", "barTexture",
@@ -110,82 +112,70 @@ end
 function AppearancePanel:Refresh()
     if not panel then return end
 
-    for _, el in ipairs(elements) do
-        if el.Hide then el:Hide() end
-        if el.SetParent then el:SetParent(nil) end
+    -- One container per build, dropped whole rather than walked. See the note in
+    -- SupportPanel: it replaces a hand-kept table of every region made, and gives
+    -- the row banding a parent of its own to count against.
+    if content then
+        content:Hide()
+        content:SetParent(nil)
     end
-    elements = {}
 
-    local W = PC.Widgets
-    local C = W.Colors
     local registry = PeaversCommons.ConfigRegistry
     if not registry then return end
 
+    content = CreateFrame("Frame", nil, panel)
+    content:SetPoint("TOPLEFT", INSET, -INSET)
+    content:SetPoint("TOPRIGHT", -INSET, -INSET)
+    content:SetHeight(1)
+
+    local width = (panel:GetWidth() or 0) - (INSET * 2)
+    if width < 100 then width = 360 end
+
     local addons = registry:GetSortedAddons()
-    local yPos = -20
-    local leftX = 25
+    local y = 0
 
-    -- ========================================
-    -- Title
-    -- ========================================
+    local title = Style.Label(content, "Global Appearance", Style.Size.hero, Style.Alpha.primary)
+    title:SetPoint("TOPLEFT", 0, y)
+    y = y - Style.Size.hero - Style.Pad.gap
 
-    local title = W:CreateLabel(panel, "Global Appearance", { color = C.text, size = 20 })
-    title:SetPoint("TOPLEFT", leftX, yPos)
-    table.insert(elements, title)
-    yPos = yPos - 28
+    local desc, descHeight = Style.Paragraph(content,
+        "Copy appearance settings - fonts, bar textures, sizes, backgrounds - from one " ..
+        "addon to all the others.", width)
+    desc:SetPoint("TOPLEFT", 0, y)
+    y = y - descHeight - Style.Pad.gap
 
-    local desc = panel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    desc:SetPoint("TOPLEFT", leftX, yPos)
-    desc:SetPoint("TOPRIGHT", -25, yPos)
-    desc:SetJustifyH("LEFT")
-    desc:SetText("Copy appearance settings (fonts, bar textures, sizes, backgrounds) from one addon to all others.")
-    desc:SetTextColor(C.textSec[1], C.textSec[2], C.textSec[3])
-    table.insert(elements, desc)
-    yPos = yPos - 35
+    y = Style.Section(content, "Sync source", y, width)
 
-    -- ========================================
-    -- Sync to All section
-    -- ========================================
+    local intro, introHeight = Style.Paragraph(content,
+        "Pick a source. Its appearance is copied to every other addon.",
+        width, Style.Alpha.muted)
+    intro:SetPoint("TOPLEFT", 0, y)
+    y = y - introHeight - Style.Pad.gap
 
-    local _, syncHeaderY = W:CreateSectionHeader(panel, "SYNC SOURCE", leftX, yPos)
-    yPos = syncHeaderY - 5
-    table.insert(elements, _)
-
-    local syncDesc = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-    syncDesc:SetPoint("TOPLEFT", leftX, yPos)
-    syncDesc:SetText("Pick a source — its appearance will be copied to every other addon.")
-    syncDesc:SetTextColor(C.textMuted[1], C.textMuted[2], C.textMuted[3])
-    table.insert(elements, syncDesc)
-    yPos = yPos - 22
-
+    -- A banded row per addon rather than a hairline-ruled one. Both are lists on
+    -- flat paper; the banding is what makes a run of them read as a table rather
+    -- than as separate strips, and it costs no extra chrome.
     for _, addonInfo in ipairs(addons) do
         if addonInfo.config then
-            -- Hairline-separated row on flat paper rather than a filled card:
-            -- the site builds lists as cells in a hairline grid.
-            local row = CreateFrame("Frame", nil, panel)
-            row:SetPoint("TOPLEFT", leftX, yPos)
-            row:SetPoint("TOPRIGHT", -25, yPos)
-            row:SetHeight(36)
-            Theme.Hairline(row, "BOTTOM")
-            table.insert(elements, row)
+            local row, nextY = Style.MakeRow(content, y, width, { height = Style.Row.tall })
 
-            local nameText = W:CreateLabel(row, addonInfo.displayName or addonInfo.name, { color = C.text })
-            nameText:SetPoint("LEFT", 12, 0)
+            local nameText = Style.Label(row, addonInfo.displayName or addonInfo.name,
+                Style.Size.label, Style.Alpha.primary)
+            nameText:SetPoint("LEFT", Style.Row.inset, 0)
 
-            local summary = W:CreateLabel(row, self:GetAddonAppearanceSummary(addonInfo.config), {
-                color = C.textMuted,
-                font = "GameFontNormalSmall",
-            })
+            local summary = Style.Label(row, self:GetAddonAppearanceSummary(addonInfo.config),
+                Style.Size.value, Style.Alpha.muted)
             summary:SetPoint("LEFT", nameText, "RIGHT", 12, 0)
 
             local addonName = addonInfo.name
             local displayName = addonInfo.displayName or addonInfo.name
-            -- Secondary: primary (near-white) is reserved for a single main
-            -- action, not a per-row control repeated down a list.
-            local syncBtn = W:CreateButton(row, "Sync to All", {
+            -- Secondary, not primary: the accent marks one main action, never a
+            -- control repeated down every row of a list.
+            local syncBtn = Style.Button(row, "Sync to All", {
                 variant = "secondary",
-                width = 90,
-                height = 22,
+                width = 96,
+                height = 24,
+                size = Style.Size.value,
                 onClick = function()
                     local dialog = StaticPopup_Show("PEAVERSCONFIG_SYNC_APPEARANCE", displayName)
                     if dialog then
@@ -193,41 +183,30 @@ function AppearancePanel:Refresh()
                     end
                 end,
             })
-            syncBtn:SetPoint("RIGHT", -8, 0)
+            syncBtn:SetPoint("RIGHT", -Style.Row.inset, 0)
 
-            yPos = yPos - 40
+            y = nextY
         end
     end
 
-    yPos = yPos - 15
-
-    -- ========================================
-    -- What gets synced
-    -- ========================================
-
-    local _, infoHeaderY = W:CreateSectionHeader(panel, "WHAT GETS SYNCED", leftX, yPos)
-    yPos = infoHeaderY - 8
-    table.insert(elements, _)
+    y = Style.Section(content, "What gets synced", y, width)
 
     local syncItems = {
-        "Font face, size, and outline style",
-        "Bar height, spacing, and opacity",
-        "Background color and transparency",
+        "Font face, size and outline style",
+        "Bar height, spacing and opacity",
+        "Background colour and transparency",
         "Bar texture",
         "Title bar visibility",
     }
 
     for _, item in ipairs(syncItems) do
-        local bullet = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-        bullet:SetPoint("TOPLEFT", leftX + 10, yPos)
-        bullet:SetText(Theme.Colorize(C.accent, "•") .. "  " .. item)
-        bullet:SetTextColor(C.textSec[1], C.textSec[2], C.textSec[3])
-        table.insert(elements, bullet)
-        yPos = yPos - 18
+        local row, nextY = Style.MakeRow(content, y, width)
+        local label = Style.Label(row, item, Style.Size.value, Style.Alpha.secondary)
+        label:SetPoint("LEFT", Style.Row.inset, 0)
+        y = nextY
     end
 
-    yPos = yPos - 10
-    panel:SetHeight(math.abs(yPos) + 50)
+    panel:SetHeight(INSET + math.abs(y) + INSET)
 end
 
 return AppearancePanel
