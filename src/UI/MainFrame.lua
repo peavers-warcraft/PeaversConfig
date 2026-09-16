@@ -18,6 +18,7 @@ end
 function MainFrame.CreateFrame(_)
     local W = PC.Widgets
     local C = W.Colors
+    local Style = PC.Style
 
     mainFrame = CreateFrame("Frame", "PeaversConfigFrame", UIParent, "BackdropTemplate") --[[@as Frame]]
     mainFrame:SetFrameStrata("DIALOG")
@@ -28,13 +29,16 @@ function MainFrame.CreateFrame(_)
 
     PC.WindowState:RestoreFramePosition(mainFrame)
 
-    mainFrame:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    mainFrame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
     mainFrame:SetBackdropColor(C.bgBase[1], C.bgBase[2], C.bgBase[3], C.bgBase[4])
-    mainFrame:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], 1)
+
+    -- The edge is four unsnapped textures rather than a backdrop edgeSize. A
+    -- nominal one-pixel edge is multiplied by the frame's effective scale, so at
+    -- a fractional scale it rounds up on some sides and down on others and the
+    -- border comes out visibly thicker along the bottom and right. See
+    -- Style.Border.
+    local frameBorder = Style.Border(mainFrame)
+    frameBorder:SetColor(1, 1, 1, Style.Rule.chrome)
 
     mainFrame:EnableMouse(true)
     mainFrame:RegisterForDrag("LeftButton")

@@ -4,11 +4,15 @@ PC.Sidebar = {}
 local Sidebar = PC.Sidebar
 
 local PeaversCommons = _G.PeaversCommons
-local Theme = PeaversCommons.Theme
+
+local Style = PC.Style
 
 local SIDEBAR_WIDTH = 180
 local HEADER_HEIGHT = 40
-local ITEM_HEIGHT = 28
+-- One row height across the whole window, taken from the shared system rather
+-- than restated here: a nav row and a list row inside a panel are the same
+-- object and should not be two pixels different.
+local ITEM_HEIGHT = Style.Row.height
 local SECTION_SPACING = 10
 local SCROLL_WIDTH = 6
 local SCROLL_STEP = 30
@@ -65,12 +69,13 @@ function Sidebar:Create(parent)
     -- them. This is the site's structural device rather than a tinted panel.
     sidebarFrame:SetBackdropColor(C.bgBase[1], C.bgBase[2], C.bgBase[3], 1)
 
-    -- Right border
-    local rightBorder = sidebarFrame:CreateTexture(nil, "ARTWORK")
+    -- The rule separating the sidebar from the content pane. Chrome weight,
+    -- because it is the window's own structure rather than a divider inside a
+    -- panel, and vertical so it gets the same no-snap treatment every other
+    -- hairline gets.
+    local rightBorder = Style.Hairline(sidebarFrame, Style.Rule.chrome, true)
     rightBorder:SetPoint("TOPRIGHT", 0, 0)
     rightBorder:SetPoint("BOTTOMRIGHT", 0, 0)
-    rightBorder:SetWidth(1)
-    rightBorder:SetColorTexture(C.border[1], C.border[2], C.border[3], 1)
 
     scrollFrame = CreateFrame("ScrollFrame", nil, sidebarFrame)
     scrollFrame:SetPoint("TOPLEFT", 0, 0)
@@ -199,17 +204,13 @@ function Sidebar:Refresh()
     local yOffset = -10
     local addons = PeaversCommons.ConfigRegistry:GetSortedAddons()
 
-    -- Addon section header, as an indigo eyebrow matching the content panes.
-    local addonHeader
-    if Theme.UsesCustomFonts() then
-        addonHeader = Theme.TrackedLabel(scrollChild, "ADDONS", 10, C.eyebrow)
-        addonHeader:SetPoint("TOPLEFT", 12, yOffset)
-    else
-        addonHeader = scrollChild:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-        addonHeader:SetPoint("TOPLEFT", 12, yOffset)
-        addonHeader:SetText("ADDONS")
-        addonHeader:SetTextColor(unpack(C.eyebrow))
-    end
+    -- A section heading in the shared vocabulary: small, uppercase, muted. The
+    -- indigo eyebrow this replaces spent the accent on a label that reads the
+    -- same on every screen, which is what stops the accent meaning anything
+    -- where it does carry state.
+    local addonHeader = Style.Label(scrollChild, "ADDONS",
+        Style.Size.section, Style.Alpha.muted)
+    addonHeader:SetPoint("TOPLEFT", 12, yOffset)
     table.insert(decorations, addonHeader)
     yOffset = yOffset - 18
 
@@ -225,11 +226,9 @@ function Sidebar:Refresh()
 
     -- Separator
     yOffset = yOffset - SECTION_SPACING
-    local sep = scrollChild:CreateTexture(nil, "ARTWORK")
+    local sep = Style.Hairline(scrollChild, Style.Rule.section)
     sep:SetPoint("TOPLEFT", 12, yOffset)
     sep:SetPoint("TOPRIGHT", -12, yOffset)
-    sep:SetHeight(1)
-    sep:SetColorTexture(C.border[1], C.border[2], C.border[3], 1)
     table.insert(decorations, sep)
     yOffset = yOffset - SECTION_SPACING
 
@@ -273,31 +272,45 @@ function Sidebar.CreateButton(_, parent, text, yOffset, onClick)
     btn:SetPoint("TOPRIGHT", -4, yOffset)
     btn:SetHeight(ITEM_HEIGHT)
 
+    -- Hover and selection are both plain white overlays at different alphas, so
+    -- they can never be mistaken for one another the way a pair of tinted fills
+    -- can.
     local highlight = btn:CreateTexture(nil, "BACKGROUND")
     highlight:SetAllPoints()
-    highlight:SetColorTexture(C.highlight[1], C.highlight[2], C.highlight[3], C.highlight[4])
+    highlight:SetColorTexture(1, 1, 1, Style.Row.hover)
     highlight:Hide()
     btn.highlight = highlight
 
     local selectedBg = btn:CreateTexture(nil, "BACKGROUND")
     selectedBg:SetAllPoints()
-    selectedBg:SetColorTexture(C.selected[1], C.selected[2], C.selected[3], C.selected[4])
+    selectedBg:SetColorTexture(1, 1, 1, Style.Row.selected)
     selectedBg:Hide()
     btn.selectedBg = selectedBg
 
-    -- Active marker: the site's indigo dot, replacing the 3px left accent bar.
+    -- Selection is the accent bar down the left edge and nothing else - the same
+    -- mark every list in the collection now uses.
+    --
+    -- This replaces an indigo dot, which was a deliberate choice here rather than
+    -- an oversight: it matched peavers.io. It is going because one vocabulary
+    -- across every window is worth more than a nod to the site in one of them.
     local accentBar = btn:CreateTexture(nil, "OVERLAY")
-    accentBar:SetPoint("LEFT", 8, 0)
-    Theme.Dot(accentBar, 5, C.accent)
+    accentBar:SetPoint("TOPLEFT", 0, 0)
+    accentBar:SetPoint("BOTTOMLEFT", 0, 0)
+    accentBar:SetWidth(Style.Row.bar)
+    accentBar:SetColorTexture(Style.Accent[1], Style.Accent[2], Style.Accent[3], 1)
+    if accentBar.SetSnapToPixelGrid then
+        accentBar:SetSnapToPixelGrid(false)
+        accentBar:SetTexelSnappingBias(0)
+    end
     accentBar:Hide()
     btn.accentBar = accentBar
 
-    local label = btn:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    -- Indented past the dot so the label does not shift on selection.
-    label:SetPoint("LEFT", 20, 0)
-    label:SetText(text)
+    -- Inset from the row's own edge, like every other row in the collection. The
+    -- bar is drawn over the same edge rather than beside the text, so the label
+    -- does not shift when the row is selected.
+    local label = Style.Label(btn, text, Style.Size.label, Style.Alpha.secondary)
+    label:SetPoint("LEFT", Style.Row.inset, 0)
     label:SetJustifyH("LEFT")
-    label:SetTextColor(C.textSec[1], C.textSec[2], C.textSec[3])
     btn.label = label
 
     btn:SetScript("OnEnter", function(self)
@@ -339,23 +352,18 @@ function Sidebar:UpdateSelection()
     local W = PC.Widgets
     local C = W.Colors
 
-    for key, btn in pairs(buttons) do
-        if btn.addonName and btn.addonName == selectedAddon then
-            btn.isSelected = true
-            btn.selectedBg:Show()
-            btn.accentBar:Show()
-            btn.label:SetTextColor(C.accentLight[1], C.accentLight[2], C.accentLight[3])
-        elseif btn.sectionKey and btn.sectionKey == selectedSection then
-            btn.isSelected = true
-            btn.selectedBg:Show()
-            btn.accentBar:Show()
-            btn.label:SetTextColor(C.accentLight[1], C.accentLight[2], C.accentLight[3])
-        else
-            btn.isSelected = false
-            btn.selectedBg:Hide()
-            btn.accentBar:Hide()
-            btn.label:SetTextColor(C.textSec[1], C.textSec[2], C.textSec[3])
-        end
+    -- The selected row brightens its label rather than recolouring it. Hierarchy
+    -- is alpha: an accent-coloured label would be a second selection signal
+    -- competing with the bar, which is the confusion the system exists to stop.
+    for _, btn in pairs(buttons) do
+        local isSelected = (btn.addonName and btn.addonName == selectedAddon)
+            or (btn.sectionKey and btn.sectionKey == selectedSection)
+
+        btn.isSelected = isSelected and true or false
+        btn.selectedBg:SetShown(btn.isSelected)
+        btn.accentBar:SetShown(btn.isSelected)
+        Style.Text(btn.label, Style.Size.label,
+            btn.isSelected and Style.Alpha.primary or Style.Alpha.secondary)
     end
 end
 
