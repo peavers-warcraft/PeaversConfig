@@ -4,7 +4,7 @@
 local _, PC = ...
 
 PC.AddonCatalog = {
-    generatedAt = "2026-08-31T02:30:16Z",
+    generatedAt = "2026-09-16T02:04:40Z",
     addons = {
         {
             folder = "BetterTogether",
@@ -35,6 +35,18 @@ PC.AddonCatalog = {
             name = "Peavers CVars",
             description = "Manage and apply console variables with login persistence.",
             tags = { "utility", "settings", "configuration" },
+        },
+        {
+            folder = "PeaversCastBar",
+            name = "Peavers Cast Bar",
+            description = "Ultra-lightweight cast bars for player, target, focus and pet. Around one client call per frame while casting, nothing at all when idle, and they can match your Cooldown Manager width.",
+            tags = { "interface", "combat", "performance", "lightweight" },
+        },
+        {
+            folder = "PeaversChat",
+            name = "Peavers Chat",
+            description = "A flat black chat window with clean text tabs, clickable URLs, a copy button, and every piece of Blizzard chrome around the frame made optional",
+            tags = { "interface", "chat", "quality-of-life", "performance", "lightweight" },
         },
         {
             folder = "PeaversCommons",
@@ -85,6 +97,12 @@ PC.AddonCatalog = {
             tags = { "travel", "navigation", "data", "library" },
         },
         {
+            folder = "PeaversGuildCount",
+            name = "Peavers Guild Count",
+            description = "Shows how many players from each guild are in your group",
+            tags = { "group", "bars", "guild" },
+        },
+        {
             folder = "PeaversIconSearch",
             name = "Peavers Icon Search",
             description = "Adds an item search box to the transmog outfit icon picker",
@@ -101,6 +119,12 @@ PC.AddonCatalog = {
             name = "Peavers Item Level",
             description = "Displays player item levels in a movable frame",
             tags = { "group", "bars" },
+        },
+        {
+            folder = "PeaversMiniMap",
+            name = "Peavers Mini Map",
+            description = "Square minimap pinned to a screen corner, with every addon button gathered into one tidy grid",
+            tags = { "interface", "minimap", "quality-of-life", "performance", "lightweight" },
         },
         {
             folder = "PeaversNeedThat",
@@ -161,6 +185,18 @@ PC.AddonCatalog = {
             name = "Peavers Talents Data",
             description = "Datasource for PeaversTalents and others",
             tags = { "talents", "data", "library" },
+        },
+        {
+            folder = "PeaversToolTip",
+            name = "Peavers Tool Tip",
+            description = "Flat black-box tooltips with a hairline border that colours itself by item quality or unit reaction",
+            tags = { "interface", "tooltip", "quality-of-life", "performance", "lightweight" },
+        },
+        {
+            folder = "PeaversUI",
+            name = "Peavers UI",
+            description = "The Peavers UI pack - an installer that sets up the whole suite in one pass",
+            tags = { "interface", "ui-pack", "installer", "performance", "lightweight" },
         },
         {
             folder = "PeaversUnitFrames",
