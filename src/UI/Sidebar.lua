@@ -185,9 +185,6 @@ function Sidebar:Create(parent)
 end
 
 function Sidebar:Refresh()
-    local W = PC.Widgets
-    local C = W.Colors
-
     for _, btn in pairs(buttons) do
         btn:Hide()
         btn:SetParent(nil)
@@ -264,9 +261,6 @@ function Sidebar:Refresh()
 end
 
 function Sidebar.CreateButton(_, parent, text, yOffset, onClick)
-    local W = PC.Widgets
-    local C = W.Colors
-
     local btn = CreateFrame("Button", nil, parent)
     btn:SetPoint("TOPLEFT", 4, yOffset)
     btn:SetPoint("TOPRIGHT", -4, yOffset)
@@ -349,9 +343,6 @@ function Sidebar:SelectSection(sectionKey)
 end
 
 function Sidebar:UpdateSelection()
-    local W = PC.Widgets
-    local C = W.Colors
-
     -- The selected row brightens its label rather than recolouring it. Hierarchy
     -- is alpha: an accent-coloured label would be a second selection signal
     -- competing with the bar, which is the confusion the system exists to stop.
