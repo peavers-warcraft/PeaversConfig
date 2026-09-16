@@ -4,7 +4,9 @@ PC.ContentArea = {}
 local ContentArea = PC.ContentArea
 
 local PeaversCommons = _G.PeaversCommons
-local Theme = PeaversCommons.Theme
+local Style = PC.Style
+
+local INSET = Style.Pad.content
 
 local SIDEBAR_WIDTH = 180
 local HEADER_HEIGHT = 40
@@ -366,9 +368,6 @@ function ContentArea:ShowGlobalAppearance()
 end
 
 function ContentArea:ShowChangelog()
-    local W = PC.Widgets
-    local C = W.Colors
-
     if cachedPanels["_changelog"] then
         cachedPanels["_changelog"]:Show()
         currentPanel = cachedPanels["_changelog"]
@@ -376,73 +375,73 @@ function ContentArea:ShowChangelog()
         return
     end
 
-    local featureHex = Theme.Hex(C.accent)
-    local fixHex = "aaaaaa"
-    local leftX = 25
-    local yPos = -20
-
     local panel = CreateFrame("Frame", nil, scrollFrame)
     panel:SetWidth(scrollChild:GetWidth())
     panel:SetHeight(600)
 
-    local title = W:CreateLabel(panel, "What's New", {
-        size = 20,
-        color = C.text,
-    })
-    title:SetPoint("TOPLEFT", leftX, yPos)
-    yPos = yPos - 10
+    local content = CreateFrame("Frame", nil, panel)
+    content:SetPoint("TOPLEFT", INSET, -INSET)
+    content:SetPoint("TOPRIGHT", -INSET, -INSET)
+    content:SetHeight(1)
+
+    local width = (panel:GetWidth() or 0) - (INSET * 2)
+    if width < 100 then width = 360 end
+
+    local y = 0
+
+    local title = Style.Label(content, "What's New", Style.Size.hero, Style.Alpha.primary)
+    title:SetPoint("TOPLEFT", 0, y)
+    y = y - Style.Size.hero - Style.Pad.gap
 
     local changelogs = _G.PeaversChangelogs
-    if not changelogs or not next(changelogs) then
-        yPos = yPos - 20
-        local noData = W:CreateLabel(panel, "No changelog data available yet. Changelogs will appear here after your next addon update.", { color = C.textMuted })
-        noData:SetPoint("TOPLEFT", leftX, yPos)
-        noData:SetPoint("TOPRIGHT", -leftX, yPos)
-        yPos = yPos - 40
-    else
-        local sortedAddons = {}
+    local sortedAddons = {}
+    if changelogs then
         for name, data in pairs(changelogs) do
             if data.entries and #data.entries > 0 then
                 table.insert(sortedAddons, { name = name, data = data })
             end
         end
         table.sort(sortedAddons, function(a, b) return a.name < b.name end)
+    end
 
-        if #sortedAddons == 0 then
-            yPos = yPos - 20
-            local noEntries = W:CreateLabel(panel, "All addons are up to date — no recent changes to show.", { color = C.textMuted })
-            noEntries:SetPoint("TOPLEFT", leftX, yPos)
-            noEntries:SetPoint("TOPRIGHT", -leftX, yPos)
-            yPos = yPos - 40
-        else
-            for _, addon in ipairs(sortedAddons) do
-                yPos = yPos - 18
-                _, yPos = W:CreateSectionHeader(panel, addon.name:gsub("^Peavers", "") .. "  v" .. (addon.data.version or ""), leftX, yPos)
-                yPos = yPos - 6
+    if #sortedAddons == 0 then
+        local text = (changelogs and next(changelogs))
+            and "All addons are up to date - no recent changes to show."
+            or "No changelog data yet. Entries appear here after your next addon update."
+        local empty, emptyHeight = Style.Paragraph(content, text, width, Style.Alpha.muted)
+        empty:SetPoint("TOPLEFT", 0, y)
+        y = y - emptyHeight
+    else
+        for _, addon in ipairs(sortedAddons) do
+            y = Style.Section(content,
+                addon.name:gsub("^Peavers", "") .. "  v" .. (addon.data.version or ""),
+                y, width)
 
-                for _, entry in ipairs(addon.data.entries) do
-                    local prefix, color
-                    if entry.type == "feature" then
-                        prefix = "|cff" .. featureHex .. "NEW|r  "
-                        color = C.text
-                    else
-                        prefix = "|cff" .. fixHex .. "FIX|r  "
-                        color = C.textSec
-                    end
+            -- NEW or FIX marked by alpha rather than by two colours. It is a
+            -- category, not a state, and the accent is spent on state alone.
+            -- The row grows to hold the entry instead of clipping it: a
+            -- changelog line is a sentence, not a label.
+            for _, entry in ipairs(addon.data.entries) do
+                local isFeature = (entry.type == "feature")
+                local row = Style.MakeRow(content, y, width)
 
-                    local entryLabel = W:CreateLabel(panel, prefix .. entry.text, { color = color })
-                    entryLabel:SetPoint("TOPLEFT", leftX + 8, yPos)
-                    entryLabel:SetPoint("TOPRIGHT", -leftX, yPos)
-                    yPos = yPos - 18
-                end
+                local marker = Style.Label(row, isFeature and "NEW" or "FIX",
+                    Style.Size.meta,
+                    isFeature and Style.Alpha.primary or Style.Alpha.muted)
+                marker:SetPoint("TOPRIGHT", -Style.Row.inset, -10)
 
-                yPos = yPos - 4
+                local text, textHeight = Style.Paragraph(row, entry.text,
+                    width - (Style.Row.inset * 2) - 44, Style.Alpha.secondary)
+                text:SetPoint("TOPLEFT", Style.Row.inset, -9)
+
+                local height = math.max(Style.Row.height, textHeight + 18)
+                row:SetHeight(height)
+                y = y - height
             end
         end
     end
 
-    yPos = yPos - 10
-    panel:SetHeight(math.abs(yPos))
+    panel:SetHeight(INSET + math.abs(y) + INSET)
 
     cachedPanels["_changelog"] = panel
     currentPanel = panel
@@ -450,9 +449,6 @@ function ContentArea:ShowChangelog()
 end
 
 function ContentArea:ShowAbout()
-    local W = PC.Widgets
-    local C = W.Colors
-
     if cachedPanels["_about"] then
         cachedPanels["_about"]:Show()
         currentPanel = cachedPanels["_about"]
@@ -460,104 +456,92 @@ function ContentArea:ShowAbout()
         return
     end
 
-    local accentHex = Theme.Hex(C.accent)
-    local leftX = 25
-    local yPos = -20
-
     local panel = CreateFrame("Frame", nil, scrollFrame)
     panel:SetWidth(scrollChild:GetWidth())
     panel:SetHeight(600)
 
-    -- Title
-    local title = W:CreateLabel(panel, "|cff" .. accentHex .. "Peavers|r Addons", {
-        size = 20,
-        color = C.text,
-    })
-    title:SetPoint("TOPLEFT", leftX, yPos)
-    yPos = yPos - 28
+    local content = CreateFrame("Frame", nil, panel)
+    content:SetPoint("TOPLEFT", INSET, -INSET)
+    content:SetPoint("TOPRIGHT", -INSET, -INSET)
+    content:SetHeight(1)
 
-    local desc = panel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    desc:SetPoint("TOPLEFT", leftX, yPos)
-    desc:SetPoint("TOPRIGHT", -leftX, yPos)
-    desc:SetJustifyH("LEFT")
-    desc:SetText("Centralized configuration for all Peavers addons. If you enjoy these addons and would like to support their development, or if you need help, stop by the website.")
-    desc:SetTextColor(C.textSec[1], C.textSec[2], C.textSec[3])
-    desc:SetSpacing(2)
-    yPos = yPos - (desc:GetStringHeight() + 20)
+    local width = (panel:GetWidth() or 0) - (INSET * 2)
+    if width < 100 then width = 360 end
 
-    -- Info section
-    _, yPos = W:CreateSectionHeader(panel, "INFO", leftX, yPos)
+    local y = 0
 
-    yPos = yPos - 8
-    local version = W:CreateLabel(panel, "Version:  |cffffffff" .. (PC.version or "1.0.0") .. "|r", { color = C.textSec })
-    version:SetPoint("TOPLEFT", leftX, yPos)
-    yPos = yPos - 18
+    local title = Style.Label(content, "Peavers Addons", Style.Size.hero, Style.Alpha.primary)
+    title:SetPoint("TOPLEFT", 0, y)
+    y = y - Style.Size.hero - Style.Pad.gap
 
-    local website = W:CreateLabel(panel, "Website:  |cff" .. accentHex .. "peavers.io|r", { color = C.textSec })
-    website:SetPoint("TOPLEFT", leftX, yPos)
-    yPos = yPos - 18
+    local desc, descHeight = Style.Paragraph(content,
+        "Centralized configuration for all Peavers addons. If you enjoy them and want " ..
+        "to support their development, or you need help, stop by the website.", width)
+    desc:SetPoint("TOPLEFT", 0, y)
+    y = y - descHeight - Style.Pad.gap
+
+    -- Label on the left, value on the right: exactly the shape Style.RowText is
+    -- for, and the reason these stop being hand-spaced strings with colour
+    -- escapes baked into them.
+    y = Style.Section(content, "Info", y, width)
 
     local addonCount = PeaversCommons.ConfigRegistry:GetAddonCount()
-    local countLabel = W:CreateLabel(panel, "Registered addons:  |cffffffff" .. addonCount .. "|r", { color = C.textSec })
-    countLabel:SetPoint("TOPLEFT", leftX, yPos)
-    yPos = yPos - 30
+    local infoRows = {
+        { "Version", PC.version or "1.0.0" },
+        { "Website", "peavers.io" },
+        { "Registered addons", tostring(addonCount) },
+    }
+    for _, pair in ipairs(infoRows) do
+        local row, nextY = Style.MakeRow(content, y, width)
+        Style.RowText(row, pair[1], pair[2])
+        y = nextY
+    end
 
-    -- parses.gg section
-    _, yPos = W:CreateSectionHeader(panel, "PARSES.GG", leftX, yPos)
+    y = Style.Section(content, "parses.gg", y, width)
+    do
+        local row, nextY = Style.MakeRow(content, y, width)
+        Style.RowText(row, "Open combat logs, free to download", "parses.gg",
+            { valueAlpha = Style.Alpha.primary })
+        y = nextY
+    end
 
-    yPos = yPos - 8
-    local parsesDesc = W:CreateLabel(panel, "Open combat logs - every fight public, no API keys, dataset free to download", { color = C.text })
-    parsesDesc:SetPoint("TOPLEFT", leftX, yPos)
-    yPos = yPos - 18
+    y = Style.Section(content, "UI Vault", y, width)
+    do
+        local row, nextY = Style.MakeRow(content, y, width)
+        Style.RowText(row, "Backup and restore every WoW addon", "vault.peavers.io",
+            { valueAlpha = Style.Alpha.primary })
+        y = nextY
+    end
 
-    local parsesUrl = W:CreateLabel(panel, "Try it at |cff" .. accentHex .. "parses.gg|r", { color = C.textSec })
-    parsesUrl:SetPoint("TOPLEFT", leftX, yPos)
-    yPos = yPos - 30
-
-    -- UI Vault section
-    _, yPos = W:CreateSectionHeader(panel, "UI VAULT", leftX, yPos)
-
-    yPos = yPos - 8
-    local vaultTitle = W:CreateLabel(panel, "One-click backup and restore of all WoW addons", { color = C.text })
-    vaultTitle:SetPoint("TOPLEFT", leftX, yPos)
-    yPos = yPos - 18
-
-    local vaultUrl = W:CreateLabel(panel, "Get it at |cff" .. accentHex .. "vault.peavers.io|r", { color = C.textSec })
-    vaultUrl:SetPoint("TOPLEFT", leftX, yPos)
-    yPos = yPos - 30
-
-    -- Patrons section
+    -- Patron names keep their own colours: those are earned marks rather than
+    -- this window's palette, so the system does not get a vote.
     local Patrons = PeaversCommons.Patrons
     if Patrons and Patrons.GetSorted then
         local allPatrons = Patrons:GetSorted()
         if #allPatrons > 0 then
-            _, yPos = W:CreateSectionHeader(panel, "PATRONS", leftX, yPos)
+            y = Style.Section(content, "Patrons", y, width)
 
-            yPos = yPos - 8
             local patronLines = {}
             for _, patron in ipairs(allPatrons) do
                 table.insert(patronLines, Patrons:GetColoredName(patron))
             end
 
-            local patronList = panel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-            patronList:SetPoint("TOPLEFT", leftX, yPos)
-            patronList:SetPoint("TOPRIGHT", -leftX, yPos)
-            patronList:SetJustifyH("LEFT")
+            local patronList = Style.Label(content, table.concat(patronLines, "\n"),
+                Style.Size.value, Style.Alpha.primary, { width = width, wrap = true })
             patronList:SetSpacing(4)
-            patronList:SetText(table.concat(patronLines, "\n"))
-            yPos = yPos - (patronList:GetStringHeight() + 20)
+            patronList:SetPoint("TOPLEFT", 0, y)
+            y = y - ((patronList:GetStringHeight() or 0) + Style.Pad.gap)
         end
     end
 
-    -- Footer
-    local _, sepY = W:CreateSeparator(panel, leftX, yPos)
-    yPos = sepY - 4
+    y = y - Style.Pad.section
 
-    local thanks = W:CreateLabel(panel, "Thank you for using Peavers Addons!", { color = C.textMuted })
-    thanks:SetPoint("TOPLEFT", leftX, yPos)
-    yPos = yPos - 30
+    local thanks = Style.Label(content, "Thank you for using Peavers addons.",
+        Style.Size.value, Style.Alpha.muted)
+    thanks:SetPoint("TOPLEFT", 0, y)
+    y = y - Style.Size.value - Style.Pad.gap
 
-    panel:SetHeight(math.abs(yPos))
+    panel:SetHeight(INSET + math.abs(y) + INSET)
 
     cachedPanels["_about"] = panel
     currentPanel = panel
@@ -594,16 +578,15 @@ function ContentArea:ShowSupport()
 end
 
 function ContentArea:ShowMessage(text)
-    local W = PC.Widgets
-    local C = W.Colors
-
     local panel = CreateFrame("Frame", nil, scrollFrame)
     panel:SetWidth(scrollChild:GetWidth())
     panel:SetHeight(200)
 
-    local msg = W:CreateLabel(panel, text, { color = C.textSec })
-    msg:SetPoint("TOPLEFT", 25, -40)
-    msg:SetPoint("TOPRIGHT", -25, -40)
+    local width = (panel:GetWidth() or 0) - (INSET * 2)
+    if width < 100 then width = 360 end
+
+    local msg = Style.Paragraph(panel, text, width, Style.Alpha.secondary)
+    msg:SetPoint("TOPLEFT", INSET, -(INSET + Style.Pad.gap))
 
     currentPanel = panel
     scrollFrame:SetScrollChild(panel)
