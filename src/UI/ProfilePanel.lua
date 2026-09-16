@@ -3,9 +3,12 @@ local _, PC = ...
 PC.ProfilePanel = {}
 local ProfilePanel = PC.ProfilePanel
 
+local Style = PC.Style
 
 local panel = nil
-local elements = {}
+local content = nil
+
+local INSET = Style.Pad.content
 
 function ProfilePanel:GetOrCreatePanel(parent)
     if panel then
@@ -56,162 +59,102 @@ function ProfilePanel:RegisterPopups()
     }
 end
 
+-- One column, not two.
+--
+-- This was laid out as a left column at x=25 and a right column at a hardcoded
+-- x=300, on a window that resizes from 650 to 1200 wide. The right column never
+-- moved, so the gap between them grew with the window and the two halves drifted
+-- apart. Sections stacked down one column reflow for free and read in the order
+-- you actually use them: which profile you are on, which exist, make a new one,
+-- act on the current one, and automate the switching.
 function ProfilePanel.Refresh(_)
     if not panel then return end
 
-    for _, el in ipairs(elements) do
-        if el.Hide then el:Hide() end
-        if el.SetParent then el:SetParent(nil) end
+    if content then
+        content:Hide()
+        content:SetParent(nil)
     end
-    elements = {}
 
     local W = PC.Widgets
-    local C = W.Colors
+
+    content = CreateFrame("Frame", nil, panel)
+    content:SetPoint("TOPLEFT", INSET, -INSET)
+    content:SetPoint("TOPRIGHT", -INSET, -INSET)
+    content:SetHeight(1)
+
+    local width = (panel:GetWidth() or 0) - (INSET * 2)
+    if width < 100 then width = 360 end
 
     local activeProfile = PC.EcosystemProfiles:GetActiveProfile()
         or (UnitName("player") .. " - " .. GetRealmName())
     local allProfiles = PC.EcosystemProfiles:GetAllProfileNames()
 
-    local yPos = -20
-    local leftX = 25
-    local rightX = 300
-    -- Left column stops short of the right column so its rule does not run under it.
-    local colWidth = rightX - leftX - 25
+    local y = 0
 
-    -- ========================================
-    -- Current Profile indicator
-    -- ========================================
+    local title = Style.Label(content, "Profiles", Style.Size.hero, Style.Alpha.primary)
+    title:SetPoint("TOPLEFT", 0, y)
+    y = y - Style.Size.hero - Style.Pad.gap
 
-    local currentPanel = W:CreatePanel(panel, { bg = C.bgNested })
-    currentPanel:SetPoint("TOPLEFT", leftX, yPos)
-    currentPanel:SetPoint("TOPRIGHT", -25, yPos)
-    currentPanel:SetHeight(50)
-    table.insert(elements, currentPanel)
+    local desc, descHeight = Style.Paragraph(content,
+        "A profile is one set of settings across every Peavers addon. Switching " ..
+        "changes them all at once.", width)
+    desc:SetPoint("TOPLEFT", 0, y)
+    y = y - descHeight - Style.Pad.gap
 
-    local activeLabel = W:CreateLabel(currentPanel, "Active Profile", { color = C.textMuted, size = 10 })
-    activeLabel:SetPoint("TOPLEFT", 12, -10)
-
-    local activeName = W:CreateLabel(currentPanel, activeProfile, { color = C.success, size = 14 })
-    activeName:SetPoint("TOPLEFT", 12, -28)
-
-    yPos = yPos - 65
-
-    -- ========================================
-    -- COLUMN 1: Profile List (left side)
-    -- ========================================
-
-    local _, headerY = W:CreateSectionHeader(panel, "AVAILABLE PROFILES", leftX, yPos, { width = colWidth })
-    yPos = headerY - 5
-    -- Store in elements for cleanup
-    table.insert(elements, _)
-
-    -- Profile list container
-    local listHeight = math.max(#allProfiles * 30 + 8, 50)
-    listHeight = math.min(listHeight, 220)
-
-    local listContainer = W:CreatePanel(panel, { bg = C.bgInput })
-    listContainer:SetPoint("TOPLEFT", leftX, yPos)
-    listContainer:SetSize(240, listHeight)
-    listContainer:SetClipsChildren(true)
-    table.insert(elements, listContainer)
-
-    -- Scroll frame inside
-    local scrollFrame = CreateFrame("ScrollFrame", nil, listContainer, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", 2, -2)
-    scrollFrame:SetPoint("BOTTOMRIGHT", -22, 2)
-
-    local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-    scrollChild:SetSize(210, #allProfiles * 30 + 8)
-    scrollFrame:SetScrollChild(scrollChild)
-
-    local contentHeight = #allProfiles * 30 + 8
-    if contentHeight <= listHeight and scrollFrame.ScrollBar then
-        scrollFrame.ScrollBar:Hide()
-        scrollFrame:SetPoint("BOTTOMRIGHT", -4, 2)
-    end
-
-    -- Profile buttons
-    local py = -4
-    for _, profileName in ipairs(allProfiles) do
-        local isActive = (profileName == activeProfile)
-
-        local btn = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
-        btn:SetSize(206, 26)
-        btn:SetPoint("TOPLEFT", 2, py)
-        btn:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-
-        if isActive then
-            btn:SetBackdropColor(C.accent[1] * 0.2, C.accent[2] * 0.2, C.accent[3] * 0.2, 0.8)
-            btn:SetBackdropBorderColor(C.accent[1], C.accent[2], C.accent[3], 0.8)
-        else
-            btn:SetBackdropColor(C.bgPanel[1], C.bgPanel[2], C.bgPanel[3], 1)
-            btn:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], 1)
-        end
-
-        local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        text:SetPoint("LEFT", 10, 0)
-        text:SetText(profileName)
-        if isActive then
-            text:SetTextColor(C.accentLight[1], C.accentLight[2], C.accentLight[3])
-        else
-            text:SetTextColor(C.text[1], C.text[2], C.text[3])
-        end
-
-        btn:SetScript("OnEnter", function(self)
-            if not isActive then
-                self:SetBackdropColor(C.highlight[1], C.highlight[2], C.highlight[3], 0.08)
-                self:SetBackdropBorderColor(C.borderHover[1], C.borderHover[2], C.borderHover[3], 1)
-            end
-        end)
-        btn:SetScript("OnLeave", function(self)
-            if not isActive then
-                self:SetBackdropColor(C.bgPanel[1], C.bgPanel[2], C.bgPanel[3], 1)
-                self:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], 1)
-            end
-        end)
-        btn:SetScript("OnClick", function()
-            PC.EcosystemProfiles:SwitchProfile(profileName)
-            ProfilePanel:Refresh()
-        end)
-
-        py = py - 30
-    end
+    ----------------------------------------------------------------------------
+    -- The profiles themselves
+    --
+    -- A flat list of rows, in the window's own scroll, rather than a fixed-height
+    -- box with a scroll frame of its own. A list inside a list is two thumbs to
+    -- find and two places to lose your position, and the box was capped at 220
+    -- pixels whether you had three profiles or thirty.
+    ----------------------------------------------------------------------------
+    y = Style.Section(content, "Available profiles", y, width)
 
     if #allProfiles == 0 then
-        local emptyText = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        emptyText:SetPoint("CENTER")
-        emptyText:SetText("No profiles yet")
-        emptyText:SetTextColor(C.textMuted[1], C.textMuted[2], C.textMuted[3])
+        local row = Style.MakeRow(content, y, width)
+        local empty = Style.Label(row, "No profiles yet", Style.Size.value, Style.Alpha.muted)
+        empty:SetPoint("LEFT", Style.Row.inset, 0)
+        y = y - Style.Row.height
+    else
+        for _, profileName in ipairs(allProfiles) do
+            local isActive = (profileName == activeProfile)
+
+            local row, nextY = Style.MakeRow(content, y, width, {
+                onClick = function()
+                    PC.EcosystemProfiles:SwitchProfile(profileName)
+                    ProfilePanel:Refresh()
+                end,
+            })
+
+            Style.RowText(row, profileName, isActive and "active" or nil, {
+                valueAlpha = Style.Alpha.primary,
+            })
+            row:SetSelected(isActive)
+
+            y = nextY
+        end
     end
 
-    yPos = yPos - listHeight - 20
+    ----------------------------------------------------------------------------
+    -- Making one
+    ----------------------------------------------------------------------------
+    y = Style.Section(content, "Create a profile", y, width)
 
-    -- ========================================
-    -- Create New Profile
-    -- ========================================
-
-    local _, createHeaderY = W:CreateSectionHeader(panel, "CREATE NEW PROFILE", leftX, yPos, { width = colWidth })
-    yPos = createHeaderY - 5
-    table.insert(elements, _)
-
-    local inputWidget = W:CreateInput(panel, nil, {
+    -- W:CreateInput, not a Style one: the system has no text field yet, and
+    -- inventing a second input idiom for a single call site would be worse than
+    -- using the one the rest of the collection already uses.
+    local inputWidget = W:CreateInput(content, nil, {
         width = 240,
         placeholder = "Enter profile name...",
         maxLetters = 50,
     })
-    inputWidget:SetPoint("TOPLEFT", leftX, yPos)
-    table.insert(elements, inputWidget)
-    yPos = yPos - 34
+    inputWidget:SetPoint("TOPLEFT", 0, y)
+    y = y - 34 - Style.Pad.gap
 
-    -- Buttons row
-    local createEmptyBtn = W:CreateButton(panel, "Create Empty", {
+    local createEmptyBtn = Style.Button(content, "Create Empty", {
         variant = "secondary",
-        width = 115,
-        height = 26,
+        width = 130,
         onClick = function()
             local name = inputWidget:GetText():trim()
             if name == "" then
@@ -224,13 +167,11 @@ function ProfilePanel.Refresh(_)
             ProfilePanel:Refresh()
         end,
     })
-    createEmptyBtn:SetPoint("TOPLEFT", leftX, yPos)
-    table.insert(elements, createEmptyBtn)
+    createEmptyBtn:SetPoint("TOPLEFT", 0, y)
 
-    local dupeBtn = W:CreateButton(panel, "Duplicate Current", {
+    local dupeBtn = Style.Button(content, "Duplicate Current", {
         variant = "primary",
-        width = 115,
-        height = 26,
+        width = 150,
         onClick = function()
             local name = inputWidget:GetText():trim()
             if name == "" then
@@ -243,86 +184,64 @@ function ProfilePanel.Refresh(_)
             ProfilePanel:Refresh()
         end,
     })
-    dupeBtn:SetPoint("LEFT", createEmptyBtn, "RIGHT", 10, 0)
-    table.insert(elements, dupeBtn)
+    dupeBtn:SetPoint("LEFT", createEmptyBtn, "RIGHT", Style.Pad.gap, 0)
+    y = y - 32 - Style.Pad.gap
 
-    -- ========================================
-    -- COLUMN 2: Actions (right side)
-    -- ========================================
+    ----------------------------------------------------------------------------
+    -- Acting on the current one
+    ----------------------------------------------------------------------------
+    y = Style.Section(content, "Profile actions", y, width)
 
-    local actionY = -85 -- Offset below the current profile panel
-
-    local _, actHeaderY = W:CreateSectionHeader(panel, "PROFILE ACTIONS", rightX, actionY, { rightInset = 25 })
-    actionY = actHeaderY - 8
-    table.insert(elements, _)
-
-    local deleteBtn = W:CreateButton(panel, "Delete Current Profile", {
+    local deleteBtn = Style.Button(content, "Delete Current Profile", {
         variant = "danger",
-        width = 180,
-        height = 26,
+        width = 190,
         onClick = function()
-            local p = activeProfile
             local charDefault = UnitName("player") .. " - " .. GetRealmName()
-            if p == charDefault then
+            if activeProfile == charDefault then
                 print("|cffff6666PeaversConfig:|r Cannot delete your character's default profile.")
                 return
             end
-            local dialog = StaticPopup_Show("PEAVERSCONFIG_DELETE_PROFILE", p)
+            local dialog = StaticPopup_Show("PEAVERSCONFIG_DELETE_PROFILE", activeProfile)
             if dialog then
-                dialog.data = p
+                dialog.data = activeProfile
             end
         end,
     })
-    deleteBtn:SetPoint("TOPLEFT", rightX, actionY)
-    table.insert(elements, deleteBtn)
-    actionY = actionY - 35
+    deleteBtn:SetPoint("TOPLEFT", 0, y)
 
-    local resetBtn = W:CreateButton(panel, "Reset to Defaults", {
+    local resetBtn = Style.Button(content, "Reset to Defaults", {
         variant = "secondary",
-        width = 180,
-        height = 26,
+        width = 160,
         onClick = function()
             StaticPopup_Show("PEAVERSCONFIG_RESET_PROFILE")
         end,
     })
-    resetBtn:SetPoint("TOPLEFT", rightX, actionY)
-    table.insert(elements, resetBtn)
-    actionY = actionY - 50
+    resetBtn:SetPoint("LEFT", deleteBtn, "RIGHT", Style.Pad.gap, 0)
+    y = y - 32 - Style.Pad.gap
 
-    -- ========================================
-    -- Auto-Switch by Spec
-    -- ========================================
+    ----------------------------------------------------------------------------
+    -- Switching by specialisation
+    ----------------------------------------------------------------------------
+    y = Style.Section(content, "Auto-switch by spec", y, width)
 
-    local _, specHeaderY = W:CreateSectionHeader(panel, "AUTO-SWITCH BY SPEC", rightX, actionY, { rightInset = 25 })
-    actionY = specHeaderY - 5
-    table.insert(elements, _)
-
-    local specDesc = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-    specDesc:SetPoint("TOPLEFT", rightX, actionY)
-    specDesc:SetText("Automatically switch profile when\nyou change specialization.")
-    specDesc:SetTextColor(C.textMuted[1], C.textMuted[2], C.textMuted[3])
-    table.insert(elements, specDesc)
-    actionY = actionY - 35
-
-    -- Enable toggle
     if not _G.PeaversConfigDB then _G.PeaversConfigDB = {} end
     if not _G.PeaversConfigDB.specAutoSwitch then
         _G.PeaversConfigDB.specAutoSwitch = { enabled = false, specProfiles = {} }
     end
     local specConfig = _G.PeaversConfigDB.specAutoSwitch
 
-    local specToggle = W:CreateCheckbox(panel, "Enable Spec Auto-Switch", {
+    local _, afterToggle = Style.Checkbox(content, y, width, {
+        label = "Switch profile when I change specialization",
         checked = specConfig.enabled,
-        width = 240,
         onChange = function(checked)
             specConfig.enabled = checked
         end,
     })
-    specToggle:SetPoint("TOPLEFT", rightX, actionY)
-    table.insert(elements, specToggle)
-    actionY = actionY - 32
+    y = afterToggle
 
-    -- Per-spec assignment
+    -- Guarded, and deliberately so: GetNumSpecializations and
+    -- GetSpecializationInfo do not exist on Classic Era, Anniversary or Mists.
+    -- The fallback branch is the only thing those clients ever see here.
     local numSpecs = GetNumSpecializations and GetNumSpecializations() or 0
     if numSpecs > 0 then
         for i = 1, numSpecs do
@@ -331,85 +250,66 @@ function ProfilePanel.Refresh(_)
                 local assignedProfile = specConfig.specProfiles and specConfig.specProfiles[i]
                 local specIndex = i
 
-                local row = CreateFrame("Frame", nil, panel)
-                row:SetPoint("TOPLEFT", rightX, actionY)
-                row:SetSize(280, 28)
-                table.insert(elements, row)
+                local row, nextY = Style.MakeRow(content, y, width, { height = Style.Row.tall })
 
-                local specLabel = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-                specLabel:SetPoint("LEFT", 0, 0)
-                specLabel:SetText("|T" .. specIcon .. ":16:16|t " .. specName)
-                specLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
+                local specLabel = Style.Label(row, "|T" .. specIcon .. ":16:16|t  " .. specName,
+                    Style.Size.label, Style.Alpha.primary)
+                specLabel:SetPoint("LEFT", Style.Row.inset, 0)
 
-                local assignedText = row:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-                assignedText:SetPoint("LEFT", specLabel, "RIGHT", 8, 0)
-                if assignedProfile then
-                    assignedText:SetText(assignedProfile)
-                    assignedText:SetTextColor(C.success[1], C.success[2], C.success[3])
-                else
-                    assignedText:SetText("None")
-                    assignedText:SetTextColor(C.textMuted[1], C.textMuted[2], C.textMuted[3])
-                end
+                local assignedText = Style.Label(row, assignedProfile or "none",
+                    Style.Size.value,
+                    assignedProfile and Style.Alpha.secondary or Style.Alpha.muted)
+                assignedText:SetPoint("LEFT", specLabel, "RIGHT", 12, 0)
 
-                local assignBtn = W:CreateButton(row, "Assign", {
-                    variant = "secondary",
-                    width = 55,
-                    height = 20,
-                    onClick = function()
-                        if not specConfig.specProfiles then specConfig.specProfiles = {} end
-                        specConfig.specProfiles[specIndex] = activeProfile
-                        ProfilePanel:Refresh()
-                    end,
-                })
-                assignBtn:SetPoint("RIGHT", row, "RIGHT", 0, 0)
-
-                local clearBtn = W:CreateButton(row, "Clear", {
-                    variant = "ghost",
-                    width = 45,
-                    height = 20,
+                local clearBtn = Style.Button(row, "Clear", {
+                    variant = "link",
+                    width = 52,
+                    height = 22,
+                    size = Style.Size.value,
                     onClick = function()
                         if not specConfig.specProfiles then specConfig.specProfiles = {} end
                         specConfig.specProfiles[specIndex] = nil
                         ProfilePanel:Refresh()
                     end,
                 })
-                clearBtn:SetPoint("RIGHT", assignBtn, "LEFT", -4, 0)
+                clearBtn:SetPoint("RIGHT", -Style.Row.inset, 0)
 
-                actionY = actionY - 32
+                local assignBtn = Style.Button(row, "Assign", {
+                    variant = "secondary",
+                    width = 68,
+                    height = 22,
+                    size = Style.Size.value,
+                    onClick = function()
+                        if not specConfig.specProfiles then specConfig.specProfiles = {} end
+                        specConfig.specProfiles[specIndex] = activeProfile
+                        ProfilePanel:Refresh()
+                    end,
+                })
+                assignBtn:SetPoint("RIGHT", clearBtn, "LEFT", -6, 0)
+
+                y = nextY
             end
         end
     else
-        local noSpec = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-        noSpec:SetPoint("TOPLEFT", rightX, actionY)
-        noSpec:SetText("Specialization data not available.")
-        noSpec:SetTextColor(C.textMuted[1], C.textMuted[2], C.textMuted[3])
-        table.insert(elements, noSpec)
-        actionY = actionY - 20
+        local row = Style.MakeRow(content, y, width)
+        local noSpec = Style.Label(row, "Specialization data is not available on this client.",
+            Style.Size.value, Style.Alpha.muted)
+        noSpec:SetPoint("LEFT", Style.Row.inset, 0)
+        y = y - Style.Row.height
     end
 
-    -- ========================================
-    -- Bottom info
-    -- ========================================
+    ----------------------------------------------------------------------------
+    -- Footer
+    ----------------------------------------------------------------------------
+    y = y - Style.Pad.section
 
-    local bottomY = math.min(yPos - 50, actionY - 30)
+    local info, infoHeight = Style.Paragraph(content,
+        "Profiles save automatically. Each character starts with a default profile of " ..
+        "its own; named profiles are shared across every character.", width, Style.Alpha.muted)
+    info:SetPoint("TOPLEFT", 0, y)
+    y = y - infoHeight
 
-    local _, sepY = W:CreateSeparator(panel, leftX, bottomY, 500)
-    bottomY = sepY
-    table.insert(elements, _)
-
-    local infoText = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-    infoText:SetPoint("TOPLEFT", leftX, bottomY)
-    infoText:SetPoint("TOPRIGHT", -25, bottomY)
-    infoText:SetJustifyH("LEFT")
-    infoText:SetText(
-        "Profiles save automatically. Switching a profile changes settings in all Peavers addons at once.\n" ..
-        "Each character starts with their own default profile. Named profiles are shared across characters."
-    )
-    infoText:SetTextColor(C.textMuted[1], C.textMuted[2], C.textMuted[3])
-    table.insert(elements, infoText)
-    bottomY = bottomY - 40
-
-    panel:SetHeight(math.abs(bottomY) + 50)
+    panel:SetHeight(INSET + math.abs(y) + INSET)
 end
 
 return ProfilePanel
