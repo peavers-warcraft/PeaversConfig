@@ -11,6 +11,7 @@ local HEADER_HEIGHT = 40
 function HeaderBar:Create(parent)
     local W = PC.Widgets
     local C = W.Colors
+    local Style = PC.Style
 
     local header = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     header:SetPoint("TOPLEFT", 2, -2)
@@ -23,39 +24,38 @@ function HeaderBar:Create(parent)
 
     self.frame = header
 
-    -- Title
-    local title = header:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+    -- Title, in one colour.
+    --
+    -- The wordmark used to tint "Peavers" with the accent, which is the accent
+    -- doing decoration. It belongs to selection and to the primary action, and
+    -- spending it on a heading that is the same on every screen is what makes it
+    -- stop meaning anything where it matters.
+    local title = Style.Label(header, "Peavers Config", Style.Size.hero, Style.Alpha.primary)
     title:SetPoint("LEFT", 16, 0)
-    title:SetText(Theme.Colorize(C.accent, "Peavers") .. " Config")
-    -- GameFontNormalLarge is gold by default, so the uncoloured half of the
-    -- wordmark inherits gold unless the base colour is set explicitly.
-    title:SetTextColor(unpack(C.text))
-    title:SetFont(title:GetFont() --[[@as string]], 16)
 
-    -- Version
-    local version = header:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-    version:SetPoint("LEFT", title, "RIGHT", 8, 0)
-    version:SetText("v" .. (PC.version or "1.0.0"))
-    version:SetTextColor(C.textMuted[1], C.textMuted[2], C.textMuted[3])
+    local version = Style.Label(header, "v" .. (PC.version or "1.0.0"),
+        Style.Size.meta, Style.Alpha.muted)
+    version:SetPoint("LEFT", title, "RIGHT", 8, -1)
 
-    -- Close button (custom styled)
-    local closeBtn = W:CreateButton(header, "x", {
-        variant = "ghost",
+    -- A text glyph rather than a bordered button: a boxed X competes with the
+    -- real actions on whichever panel is open. ASCII, not a typographic
+    -- multiplication sign - the game's fonts carry almost nothing outside basic
+    -- Latin and the nicer glyph draws as blank space.
+    local closeBtn = Style.Button(header, "X", {
+        variant = "link",
         width = 28,
         height = 28,
         onClick = function()
             PC.MainFrame:Hide()
         end,
     })
-    closeBtn:SetPoint("TOPRIGHT", -4, -6)
-    closeBtn.label:SetTextColor(C.textMuted[1], C.textMuted[2], C.textMuted[3])
+    closeBtn:SetPoint("TOPRIGHT", -6, -6)
 
-    -- Bottom border
-    local borderLine = header:CreateTexture(nil, "ARTWORK")
+    -- Bottom border, at the chrome weight: this is the window's own structure
+    -- rather than a divider inside a panel.
+    local borderLine = Style.Hairline(header, Style.Rule.chrome)
     borderLine:SetPoint("BOTTOMLEFT", 0, 0)
     borderLine:SetPoint("BOTTOMRIGHT", 0, 0)
-    borderLine:SetHeight(1)
-    borderLine:SetColorTexture(C.border[1], C.border[2], C.border[3], 1)
 
     return header
 end
