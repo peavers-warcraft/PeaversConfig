@@ -3,9 +3,6 @@ local _, PC = ...
 PC.HeaderBar = {}
 local HeaderBar = PC.HeaderBar
 
-local PeaversCommons = _G.PeaversCommons
-local Theme = PeaversCommons.Theme
-
 local HEADER_HEIGHT = 40
 
 function HeaderBar:Create(parent)
