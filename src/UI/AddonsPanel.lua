@@ -3,11 +3,17 @@ local _, PC = ...
 PC.AddonsPanel = {}
 local AddonsPanel = PC.AddonsPanel
 
-local PeaversCommons = _G.PeaversCommons
-local Theme = PeaversCommons.Theme
+local Style = PC.Style
+local C = PC.Widgets.Colors
 
 local panel = nil
-local elements = {}
+local content = nil
+
+local INSET = Style.Pad.content
+-- Where the description starts and how much room the status word keeps. Two
+-- numbers for the whole table, so every row lines up with the one above it.
+local NAME_COL = 170
+local STATUS_COL = 104
 
 -- Folder names of every addon physically present, loaded or not. Installation
 -- can't change mid-session, but enable state can, so this stays a function.
@@ -41,17 +47,18 @@ end
 function AddonsPanel:Refresh()
     if not panel then return end
 
-    for _, el in ipairs(elements) do
-        if el.Hide then el:Hide() end
-        if el.SetParent then el:SetParent(nil) end
+    if content then
+        content:Hide()
+        content:SetParent(nil)
     end
-    elements = {}
 
-    local W = PC.Widgets
-    local C = W.Colors
-    local leftX = 25
-    local yPos = -20
-    local accentHex = Theme.Hex(C.accent)
+    content = CreateFrame("Frame", nil, panel)
+    content:SetPoint("TOPLEFT", INSET, -INSET)
+    content:SetPoint("TOPRIGHT", -INSET, -INSET)
+    content:SetHeight(1)
+
+    local width = (panel:GetWidth() or 0) - (INSET * 2)
+    if width < 100 then width = 360 end
 
     local catalog = (PC.AddonCatalog and PC.AddonCatalog.addons) or {}
     local installed = GetInstalledFolders()
@@ -68,86 +75,80 @@ function AddonsPanel:Refresh()
     table.sort(missing, byName)
     table.sort(have, byName)
 
-    local title = W:CreateLabel(panel, "All |cff" .. accentHex .. "Peavers|r Addons", {
-        color = C.text,
-        size = 20,
-    })
-    title:SetPoint("TOPLEFT", leftX, yPos)
-    table.insert(elements, title)
-    yPos = yPos - 28
+    local y = 0
+
+    local title = Style.Label(content, "All Peavers Addons", Style.Size.hero, Style.Alpha.primary)
+    title:SetPoint("TOPLEFT", 0, y)
+    y = y - Style.Size.hero - Style.Pad.gap
 
     local summaryText
     if #catalog == 0 then
         summaryText = "No catalog data available. This build is missing its bundled addon catalog."
     elseif #missing == 0 then
-        summaryText = "You have all " .. #catalog .. " Peavers addons installed. Thank you!"
+        summaryText = "You have all " .. #catalog .. " Peavers addons installed. Thank you."
     else
         summaryText = "You have " .. #have .. " of " .. #catalog .. " Peavers addons installed."
     end
-    local summary = panel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    summary:SetPoint("TOPLEFT", leftX, yPos)
-    summary:SetPoint("TOPRIGHT", -leftX, yPos)
-    summary:SetJustifyH("LEFT")
-    summary:SetText(summaryText)
-    summary:SetTextColor(C.textSec[1], C.textSec[2], C.textSec[3])
-    table.insert(elements, summary)
-    yPos = yPos - (summary:GetStringHeight() + 25)
 
+    local summary, summaryHeight = Style.Paragraph(content, summaryText, width)
+    summary:SetPoint("TOPLEFT", 0, y)
+    y = y - summaryHeight - Style.Pad.gap
+
+    -- A row per addon: name, what it does, and whether you have it.
+    --
+    -- This was a dot, a name, and the description wrapped underneath on its own
+    -- line - two lines and a floating marker for every entry, which at twenty
+    -- addons is a wall rather than a list. Name and description in fixed columns
+    -- with the state as a word on the right is the same information as a table
+    -- you can scan, and it retires the dot: a colour that has to be decoded
+    -- says less than the word it stood for.
     local function AddRow(addon, isInstalled)
-        local dot = panel:CreateTexture(nil, "ARTWORK")
-        dot:SetPoint("TOPLEFT", leftX + 2, yPos - 5)
-        Theme.Dot(dot, 5, isInstalled and C.statusLive or C.amber)
-        table.insert(elements, dot)
+        local row, nextY = Style.MakeRow(content, y, width)
 
-        local name = panel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-        name:SetPoint("TOPLEFT", leftX + 14, yPos)
-        name:SetText(addon.name)
-        local nameColor = isInstalled and C.textSec or C.text
-        name:SetTextColor(nameColor[1], nameColor[2], nameColor[3])
-        table.insert(elements, name)
-        yPos = yPos - 16
+        local name = Style.Label(row, addon.name, Style.Size.label, Style.Alpha.primary)
+        name:SetPoint("LEFT", Style.Row.inset, 0)
+        name:SetWidth(NAME_COL - Style.Row.inset - 8)
+        name:SetWordWrap(false)
+        name:SetJustifyH("LEFT")
 
-        local desc = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-        desc:SetPoint("TOPLEFT", leftX + 14, yPos)
-        desc:SetPoint("TOPRIGHT", -leftX, yPos)
+        local desc = Style.Label(row, addon.description or "", Style.Size.value, Style.Alpha.muted)
+        desc:SetPoint("LEFT", NAME_COL, 0)
+        desc:SetWidth(width - NAME_COL - STATUS_COL)
+        desc:SetWordWrap(false)
         desc:SetJustifyH("LEFT")
-        desc:SetText(addon.description or "")
-        local descColor = isInstalled and C.textMuted or C.textSec
-        desc:SetTextColor(descColor[1], descColor[2], descColor[3])
-        table.insert(elements, desc)
-        yPos = yPos - (desc:GetStringHeight() + 12)
+
+        local status = Style.Label(row, isInstalled and "installed" or "not installed",
+            Style.Size.value,
+            isInstalled and Style.Alpha.muted or Style.Alpha.primary,
+            { color = (not isInstalled) and C.amber or nil })
+        status:SetPoint("RIGHT", -Style.Row.inset, 0)
+        status:SetJustifyH("RIGHT")
+
+        y = nextY
     end
 
     if #missing > 0 then
-        local header, headerY = W:CreateSectionHeader(panel, "NOT INSTALLED (" .. #missing .. ")", leftX, yPos)
-        table.insert(elements, header)
-        yPos = headerY - 8
-
+        y = Style.Section(content, "Not installed (" .. #missing .. ")", y, width)
         for _, addon in ipairs(missing) do
             AddRow(addon, false)
         end
 
-        local hint = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-        hint:SetPoint("TOPLEFT", leftX, yPos)
-        hint:SetPoint("TOPRIGHT", -leftX, yPos)
-        hint:SetJustifyH("LEFT")
-        hint:SetText("Get these with the Peavers Updater app or from CurseForge — |cff" .. accentHex .. "addons.peavers.io|r")
-        hint:SetTextColor(C.textMuted[1], C.textMuted[2], C.textMuted[3])
-        table.insert(elements, hint)
-        yPos = yPos - (hint:GetStringHeight() + 25)
+        y = y - Style.Pad.gap
+        local hint, hintHeight = Style.Paragraph(content,
+            "Get these with the Peavers Updater app, or from CurseForge - addons.peavers.io",
+            width, Style.Alpha.muted)
+        hint:SetPoint("TOPLEFT", 0, y)
+        y = y - hintHeight
     end
 
     if #have > 0 then
-        local header, headerY = W:CreateSectionHeader(panel, "INSTALLED (" .. #have .. ")", leftX, yPos)
-        table.insert(elements, header)
-        yPos = headerY - 8
-
+        y = Style.Section(content, "Installed (" .. #have .. ")", y, width)
         for _, addon in ipairs(have) do
             AddRow(addon, true)
         end
     end
 
-    panel:SetHeight(math.abs(yPos) + 20)
+    panel:SetHeight(INSET + math.abs(y) + INSET)
 end
 
 return AddonsPanel
