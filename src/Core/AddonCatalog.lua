@@ -4,7 +4,7 @@
 local _, PC = ...
 
 PC.AddonCatalog = {
-    generatedAt = "2026-09-17T23:08:08Z",
+    generatedAt = "2026-09-28T06:50:58Z",
     addons = {
         {
             folder = "BetterTogether",
@@ -15,7 +15,7 @@ PC.AddonCatalog = {
         {
             folder = "PeaversAlwaysSquare",
             name = "Peavers Always Square",
-            description = "Automatically sets the tank's raid icon as a square when in a party",
+            description = "Marks your party's tank with a square in one press - a button, a key binding or a macro",
             tags = { "combat", "party", "mythic+" },
         },
         {
