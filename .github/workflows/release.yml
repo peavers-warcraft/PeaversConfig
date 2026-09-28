@@ -17,7 +17,15 @@ jobs:
   # rebases onto master before tagging and packaging, so a commit pushed here
   # is included in the released zip.
   update-catalog:
-    runs-on: warcraft-runners
+    # Blacksmith, like the shared release workflow this job feeds. The
+    # in-cluster `warcraft-runners` pool it used to name no longer exists (ARC
+    # wedged it half-deleted on 2026-09-25), and a `runs-on` naming a pool that
+    # is not there queues rather than failing - which would have hung every
+    # release here, since `release` needs this job. Nothing in
+    # scripts/update-catalog.sh needs the LAN (it curls addons.peavers.io), and
+    # the App token action falls back to the public Vault tunnel. RUNNER_LABEL
+    # moves it without a commit.
+    runs-on: ${{ vars.RUNNER_LABEL || 'blacksmith-4vcpu-ubuntu-2404' }}
     steps:
       - name: Mint GitHub App token (Vault OIDC)
         id: ghtoken
