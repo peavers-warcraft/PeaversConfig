@@ -21,6 +21,7 @@ src\Main.lua
 src\Core\WindowState.lua
 src\Core\EcosystemProfiles.lua
 src\Core\AddonCatalog.lua
+src\Core\AddonCategories.lua
 src\UI\Widgets.lua
 src\UI\MainFrame.lua
 src\UI\HeaderBar.lua
