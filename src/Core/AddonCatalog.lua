@@ -4,7 +4,7 @@
 local _, PC = ...
 
 PC.AddonCatalog = {
-    generatedAt = "2026-10-14T03:41:21Z",
+    generatedAt = "2026-10-18T15:46:20Z",
     addons = {
         {
             folder = "BetterTogether",
@@ -49,6 +49,12 @@ PC.AddonCatalog = {
             tags = { "interface", "chat", "quality-of-life", "performance", "lightweight" },
         },
         {
+            folder = "PeaversCombatTime",
+            name = "Peavers Combat Time",
+            description = "A combat stopwatch. Times every fight you are in - chain pulls, boss encounters, open world - and keeps the last few in a log underneath so you can see what is getting faster.",
+            tags = { "combat", "raid", "dungeons", "performance", "lightweight" },
+        },
+        {
             folder = "PeaversCommons",
             name = "Peavers Commons",
             description = "Common functionality for Peavers addons",
@@ -59,6 +65,12 @@ PC.AddonCatalog = {
             name = "Peavers Config",
             description = "Centralized configuration for all Peavers addons",
             tags = { "utility", "configuration" },
+        },
+        {
+            folder = "PeaversConsumableBar",
+            name = "Peavers Consumable Bar",
+            description = "Puts the consumables already in your bags on a bar, so flasks, food and oils are one click away before a pull",
+            tags = { "interface", "inventory", "combat", "lightweight" },
         },
         {
             folder = "PeaversConsumables",
