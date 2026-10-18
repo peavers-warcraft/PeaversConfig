@@ -14,6 +14,10 @@ local HEADER_HEIGHT = 40
 -- object and should not be two pixels different.
 local ITEM_HEIGHT = Style.Row.height
 local SECTION_SPACING = 10
+-- Air between one category's last row and the next category's heading. Smaller
+-- than SECTION_SPACING on purpose: the categories are divisions inside one list,
+-- while SECTION_SPACING separates that list from the window's own navigation.
+local GROUP_SPACING = 8
 local SCROLL_WIDTH = 6
 local SCROLL_STEP = 30
 
@@ -201,33 +205,56 @@ function Sidebar:Refresh()
     local yOffset = -10
     local addons = PeaversCommons.ConfigRegistry:GetSortedAddons()
 
-    -- A section heading in the shared vocabulary: small, uppercase, muted. The
-    -- indigo eyebrow this replaces spent the accent on a label that reads the
-    -- same on every screen, which is what stops the accent meaning anything
-    -- where it does carry state.
-    local addonHeader = Style.Label(scrollChild, "ADDONS",
-        Style.Size.section, Style.Alpha.muted)
-    addonHeader:SetPoint("TOPLEFT", 12, yOffset)
-    table.insert(decorations, addonHeader)
-    yOffset = yOffset - 18
+    -- Addons, shelved by category and alphabetical inside each shelf. The one
+    -- "ADDONS" heading this replaces was correct when the column was six rows
+    -- long; past twenty it labelled the obvious and left the actual list
+    -- unsorted in any way the eye could use, since every row starts with the
+    -- same word once the prefix is stripped for display. See
+    -- Core/AddonCategories.lua for where the shelves are decided.
+    local groups = PC.AddonCategories:Group(addons)
 
-    -- Addon buttons
-    for _, info in ipairs(addons) do
-        local btn = self:CreateButton(scrollChild, info.displayName, yOffset, function()
-            self:Select(info.name)
-        end)
-        btn.addonName = info.name
-        buttons[info.name] = btn
-        yOffset = yOffset - ITEM_HEIGHT
+    for index, group in ipairs(groups) do
+        -- Air before every heading but the first. Added here rather than after
+        -- each group so the gap above the separator below stays the one
+        -- SECTION_SPACING it has always been. The headings carry no rule of
+        -- their own the way Style.Section's do: at 180 pixels wide with rows
+        -- this close together, a rule per group reads as six windows stacked
+        -- rather than as one list.
+        if index > 1 then
+            yOffset = yOffset - GROUP_SPACING
+        end
+
+        -- A section heading in the shared vocabulary: small, uppercase, muted.
+        -- The indigo eyebrow this replaces spent the accent on a label that
+        -- reads the same on every screen, which is what stops the accent
+        -- meaning anything where it does carry state.
+        local header = Style.Label(scrollChild, group.name:upper(),
+            Style.Size.section, Style.Alpha.muted)
+        header:SetPoint("TOPLEFT", 12, yOffset)
+        table.insert(decorations, header)
+        yOffset = yOffset - 18
+
+        for _, info in ipairs(group.addons) do
+            local btn = self:CreateButton(scrollChild, info.displayName, yOffset, function()
+                self:Select(info.name)
+            end)
+            btn.addonName = info.name
+            buttons[info.name] = btn
+            yOffset = yOffset - ITEM_HEIGHT
+        end
     end
 
-    -- Separator
-    yOffset = yOffset - SECTION_SPACING
-    local sep = Style.Hairline(scrollChild, Style.Rule.section)
-    sep:SetPoint("TOPLEFT", 12, yOffset)
-    sep:SetPoint("TOPRIGHT", -12, yOffset)
-    table.insert(decorations, sep)
-    yOffset = yOffset - SECTION_SPACING
+    -- Separator. Skipped when nothing registered, because with no addon rows
+    -- above it the rule is a line across the top of the window separating the
+    -- sections from nothing.
+    if #groups > 0 then
+        yOffset = yOffset - SECTION_SPACING
+        local sep = Style.Hairline(scrollChild, Style.Rule.section)
+        sep:SetPoint("TOPLEFT", 12, yOffset)
+        sep:SetPoint("TOPRIGHT", -12, yOffset)
+        table.insert(decorations, sep)
+        yOffset = yOffset - SECTION_SPACING
+    end
 
     -- Fixed section buttons
     local sections = {
