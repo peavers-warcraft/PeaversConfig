@@ -340,6 +340,12 @@ function ContentArea:ShowSection(sectionKey)
             currentPanel = panel
             scrollFrame:SetScrollChild(panel)
         end
+    elseif sectionKey == "transfer" then
+        if PC.TransferPanel then
+            local panel = PC.TransferPanel:GetOrCreatePanel(scrollFrame)
+            currentPanel = panel
+            scrollFrame:SetScrollChild(panel)
+        end
     elseif sectionKey == "browse" then
         self:ShowBrowse()
     elseif sectionKey == "appearance" then

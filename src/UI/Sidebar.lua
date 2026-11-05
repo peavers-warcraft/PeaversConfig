@@ -260,6 +260,7 @@ function Sidebar:Refresh()
     local sections = {
         { key = "browse", label = "All Addons" },
         { key = "profiles", label = "Profiles" },
+        { key = "transfer", label = "Import / Export" },
         { key = "appearance", label = "Global Appearance" },
         { key = "support", label = "Support" },
         { key = "changelog", label = "What's New" },

@@ -28,6 +28,12 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         C_Timer.After(2, function()
             PC.EcosystemProfiles:ApplyActiveProfileOnLogin()
         end)
+
+        -- An import or undo ends in a reload, which clears chat, so what it did
+        -- is said here instead - late enough to land after the login spam.
+        C_Timer.After(4, function()
+            PC.SettingsTransfer:AnnounceLastImport()
+        end)
     end
 end)
 
@@ -41,6 +47,9 @@ SlashCmdList["PEAVERSCONFIG"] = function(msg)
     elseif msg == "profiles" then
         PC.MainFrame:Show()
         PC.MainFrame:SelectSection("profiles")
+    elseif msg == "import" or msg == "export" then
+        PC.MainFrame:Show()
+        PC.MainFrame:SelectSection("transfer")
     else
         PC.MainFrame:Show()
         local registry = PeaversCommons.ConfigRegistry
