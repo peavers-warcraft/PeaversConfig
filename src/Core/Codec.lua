@@ -172,7 +172,7 @@ ReadValue = function(s, pos, depth)
             if type(k) == "table" then return nil, "a table is used as a key" end
             v, pos = ReadValue(s, pos, depth + 1)
             if v == nil then return nil, pos end
-            t[k] = v
+            if k ~= nil then t[k] = v end
         end
     end
 
