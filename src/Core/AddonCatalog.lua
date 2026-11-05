@@ -4,7 +4,7 @@
 local _, PC = ...
 
 PC.AddonCatalog = {
-    generatedAt = "2026-10-18T15:46:20Z",
+    generatedAt = "2026-11-05T14:01:29Z",
     addons = {
         {
             folder = "BetterTogether",
@@ -47,6 +47,12 @@ PC.AddonCatalog = {
             name = "Peavers Chat",
             description = "A flat black chat window with clean text tabs, clickable URLs, a copy button, and every piece of Blizzard chrome around the frame made optional",
             tags = { "interface", "chat", "quality-of-life", "performance", "lightweight" },
+        },
+        {
+            folder = "PeaversCombatRes",
+            name = "Peavers Combat Res",
+            description = "Tracks the group's shared battle res charges and who can use them",
+            tags = { "raid", "mythic-plus", "bars", "performance" },
         },
         {
             folder = "PeaversCombatTime",
