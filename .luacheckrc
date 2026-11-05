@@ -20,3 +20,6 @@ stds.wow        = base.wow
 -- PeaversCommonsDB (appearance/support settings) on behalf of the ecosystem.
 globals = base.globals
 for _, g in ipairs({"PeaversConfigDB", "PeaversCommonsDB"}) do globals[#globals + 1] = g end
+
+-- In every client, but missing from the generated WoW std.
+read_globals = { "ReloadUI" }

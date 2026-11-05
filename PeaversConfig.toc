@@ -20,6 +20,8 @@ Changelog.lua
 src\Main.lua
 src\Core\WindowState.lua
 src\Core\EcosystemProfiles.lua
+src\Core\Codec.lua
+src\Core\SettingsTransfer.lua
 src\Core\AddonCatalog.lua
 src\Core\AddonCategories.lua
 src\UI\Widgets.lua
@@ -28,6 +30,8 @@ src\UI\HeaderBar.lua
 src\UI\Sidebar.lua
 src\UI\ContentArea.lua
 src\UI\ProfilePanel.lua
+src\UI\TextWindow.lua
+src\UI\TransferPanel.lua
 src\UI\AppearancePanel.lua
 src\UI\SupportPanel.lua
 src\UI\AddonsPanel.lua

@@ -11,6 +11,7 @@ Centralized configuration hub for all Peavers addons
 - Per-addon settings pages with tabbed navigation
 - Global appearance settings applied across all addons
 - Profile management with ecosystem-wide presets
+- Import / Export: every Peavers addon's settings as one string, to move to WoW Forever, Classic, another PC or a friend
 - Changelog viewer for all installed Peavers addons
 <!-- /peavers:features -->
 
@@ -19,6 +20,7 @@ Centralized configuration hub for all Peavers addons
 <!-- peavers:usage -->
 - `/pconfig` - Open the configuration window
 - `/peavers` - Open the configuration window
+- `/peavers export` or `/peavers import` - Move your settings to another client
 - `/peavers <addon>` - Jump directly to a specific addon's settings
 <!-- /peavers:usage -->
 
