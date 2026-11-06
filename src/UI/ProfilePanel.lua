@@ -239,10 +239,13 @@ function ProfilePanel.Refresh(_)
     })
     y = afterToggle
 
-    -- Guarded, and deliberately so: GetNumSpecializations and
-    -- GetSpecializationInfo do not exist on Classic Era, Anniversary or Mists.
-    -- The fallback branch is the only thing those clients ever see here.
-    local numSpecs = GetNumSpecializations and GetNumSpecializations() or 0
+    -- Classic Era, Anniversary and Mists define a global GetNumSpecializations
+    -- (it returns 1 on Era) but no global GetSpecializationInfo or
+    -- GetSpecialization, so checking the count alone calls nil. Gate on the same
+    -- globals EcosystemProfiles:SetupSpecAutoSwitch needs: where auto-switch
+    -- cannot run, listing specs to assign would only mislead.
+    local hasSpecs = GetNumSpecializations and GetSpecializationInfo and GetSpecialization
+    local numSpecs = hasSpecs and GetNumSpecializations() or 0
     if numSpecs > 0 then
         for i = 1, numSpecs do
             local _, specName, _, specIcon = GetSpecializationInfo(i)
