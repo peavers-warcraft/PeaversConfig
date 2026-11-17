@@ -4,7 +4,7 @@
 local _, PC = ...
 
 PC.AddonCatalog = {
-    generatedAt = "2026-11-06T13:46:39Z",
+    generatedAt = "2026-11-17T20:46:59Z",
     addons = {
         {
             folder = "BetterTogether",
