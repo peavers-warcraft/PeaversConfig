@@ -166,13 +166,13 @@ ReadValue = function(s, pos, depth)
             if pos > #s then return nil, "a table is never closed" end
             if sub(s, pos, pos) == "}" then return t, pos + 1 end
 
-            local k, v
-            k, pos = ReadValue(s, pos, depth + 1)
-            if k == nil then return nil, pos end
+            local k, afterKey = ReadValue(s, pos, depth + 1)
+            if k == nil then return nil, afterKey end
             if type(k) == "table" then return nil, "a table is used as a key" end
-            v, pos = ReadValue(s, pos, depth + 1)
-            if v == nil then return nil, pos end
+            local v, afterValue = ReadValue(s, afterKey, depth + 1)
+            if v == nil then return nil, afterValue end
             t[k] = v
+            pos = afterValue
         end
     end
 
