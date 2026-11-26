@@ -224,11 +224,8 @@ function ProfilePanel.Refresh(_)
     ----------------------------------------------------------------------------
     y = Style.Section(content, "Auto-switch by spec", y, width)
 
-    if not _G.PeaversConfigDB then _G.PeaversConfigDB = {} end
-    if not _G.PeaversConfigDB.specAutoSwitch then
-        _G.PeaversConfigDB.specAutoSwitch = { enabled = false, specProfiles = {} }
-    end
-    local specConfig = _G.PeaversConfigDB.specAutoSwitch
+    -- This character's specs: another class's spec 1 is a different spec.
+    local specConfig = PC.EcosystemProfiles:GetSpecConfig()
 
     local _, afterToggle = Style.Checkbox(content, y, width, {
         label = "Switch profile when I change specialization",
@@ -308,7 +305,7 @@ function ProfilePanel.Refresh(_)
 
     local info, infoHeight = Style.Paragraph(content,
         "Profiles save automatically. Each character starts with a default profile of " ..
-        "its own; named profiles are shared across every character.", width, Style.Alpha.muted)
+        "its own and remembers which profile it uses; any character can pick a named profile.", width, Style.Alpha.muted)
     info:SetPoint("TOPLEFT", 0, y)
     y = y - infoHeight
 
