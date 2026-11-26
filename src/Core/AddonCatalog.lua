@@ -4,13 +4,19 @@
 local _, PC = ...
 
 PC.AddonCatalog = {
-    generatedAt = "2026-11-17T20:46:59Z",
+    generatedAt = "2026-11-26T21:23:45Z",
     addons = {
         {
             folder = "BetterTogether",
             name = "Better Together",
             description = "Partner readiness dashboard for duo play.",
             tags = { "social", "utility" },
+        },
+        {
+            folder = "ForeverMarkets",
+            name = "Forever Markets",
+            description = "Records your gold, stock, auction house searches and trades for the Forever Markets website, carries out the plan it sends, and finds vendor flips.",
+            tags = {  },
         },
         {
             folder = "PeaversAlwaysSquare",
@@ -45,7 +51,7 @@ PC.AddonCatalog = {
         {
             folder = "PeaversChat",
             name = "Peavers Chat",
-            description = "A flat black chat window with clean text tabs, clickable URLs, a copy button, and every piece of Blizzard chrome around the frame made optional",
+            description = "A flat dark chat window with boxed tabs, clickable URLs, a copy button, and every piece of Blizzard chrome around the frame made optional",
             tags = { "interface", "chat", "quality-of-life", "performance", "lightweight" },
         },
         {
