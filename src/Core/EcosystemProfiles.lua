@@ -3,27 +3,81 @@ local _, PC = ...
 PC.EcosystemProfiles = {}
 local EcosystemProfiles = PC.EcosystemProfiles
 
+local function CharacterKey()
+    return UnitName("player") .. " - " .. GetRealmName()
+end
+
+local function CopySpecConfig(from)
+    local copy = { enabled = from and from.enabled or false, specProfiles = {} }
+    if from and type(from.specProfiles) == "table" then
+        for index, name in pairs(from.specProfiles) do copy.specProfiles[index] = name end
+    end
+    return copy
+end
+
+-- Which profile a character uses, and which profile each of its specs switches
+-- to, belong to that character. Both used to sit at the top of the account's
+-- saved variables, so picking a profile on one character moved every other
+-- character onto it at their next login.
+function EcosystemProfiles:GetCharacterState()
+    local db = _G.PeaversConfigDB
+    if not db.characters then db.characters = {} end
+    local key = CharacterKey()
+    local state = db.characters[key]
+    if not state then
+        -- Spec choices were one account-wide list. Each character starts from
+        -- a copy of it, so nobody's setup vanishes, and goes its own way after.
+        state = { specAutoSwitch = CopySpecConfig(db.specAutoSwitch) }
+        db.characters[key] = state
+    end
+    return state
+end
+
 function EcosystemProfiles:Initialize()
     if not _G.PeaversConfigDB then _G.PeaversConfigDB = {} end
     if not _G.PeaversConfigDB.ecosystemProfiles then
         _G.PeaversConfigDB.ecosystemProfiles = {}
     end
-    if not _G.PeaversConfigDB.activeEcosystemProfile then
-        _G.PeaversConfigDB.activeEcosystemProfile = nil
-    end
-    if not _G.PeaversConfigDB.specAutoSwitch then
-        _G.PeaversConfigDB.specAutoSwitch = { enabled = false, specProfiles = {} }
-    end
+    -- The old account-wide choice is not carried over: the profile each addon
+    -- remembers for this character is already the right answer, and copying
+    -- the shared one would repeat the bug once more for every character.
+    _G.PeaversConfigDB.activeEcosystemProfile = nil
 
     self:SetupSpecAutoSwitch()
+end
+
+function EcosystemProfiles:GetSpecConfig()
+    return self:GetCharacterState().specAutoSwitch
 end
 
 function EcosystemProfiles:GetProfiles()
     return _G.PeaversConfigDB.ecosystemProfiles or {}
 end
 
+-- The profile this character's addons are on, when it has not picked one here
+-- yet: whichever most of them use, as each addon keeps its own per character.
+local function ProfileInUse()
+    local registry = _G.PeaversCommons and _G.PeaversCommons.ConfigRegistry
+    if not registry then return nil end
+    local counts, best = {}, nil
+    for _, info in pairs(registry:GetRegisteredAddons()) do
+        local name = info.config and info.config.GetCurrentProfile and info.config:GetCurrentProfile()
+        if name then
+            counts[name] = (counts[name] or 0) + 1
+            if not best or counts[name] > counts[best] or (counts[name] == counts[best] and name < best) then
+                best = name
+            end
+        end
+    end
+    return best
+end
+
 function EcosystemProfiles:GetActiveProfile()
-    return _G.PeaversConfigDB.activeEcosystemProfile
+    return self:GetCharacterState().activeProfile or ProfileInUse()
+end
+
+local function SetActiveProfile(name)
+    EcosystemProfiles:GetCharacterState().activeProfile = name
 end
 
 function EcosystemProfiles:GetAllProfileNames()
@@ -82,7 +136,7 @@ function EcosystemProfiles:CreateEmptyProfile(name)
     end
 
     _G.PeaversConfigDB.ecosystemProfiles[name] = true
-    _G.PeaversConfigDB.activeEcosystemProfile = name
+    SetActiveProfile(name)
     print("|cff00ff00PeaversConfig:|r Created new profile: " .. name)
     return true
 end
@@ -112,7 +166,7 @@ function EcosystemProfiles:DuplicateProfile(name)
     end
 
     _G.PeaversConfigDB.ecosystemProfiles[name] = true
-    _G.PeaversConfigDB.activeEcosystemProfile = name
+    SetActiveProfile(name)
     print("|cff00ff00PeaversConfig:|r Duplicated current profile to: " .. name)
     return true
 end
@@ -120,7 +174,7 @@ end
 function EcosystemProfiles:DeleteProfile(name)
     if not name or not _G.PeaversConfigDB.ecosystemProfiles then return false end
 
-    local charDefault = UnitName("player") .. " - " .. GetRealmName()
+    local charDefault = CharacterKey()
 
     local registry = _G.PeaversCommons and _G.PeaversCommons.ConfigRegistry
     if registry then
@@ -136,8 +190,9 @@ function EcosystemProfiles:DeleteProfile(name)
     end
 
     _G.PeaversConfigDB.ecosystemProfiles[name] = nil
-    if _G.PeaversConfigDB.activeEcosystemProfile == name then
-        _G.PeaversConfigDB.activeEcosystemProfile = nil
+    -- Gone for every character, so no character may still ask for it at login.
+    for _, state in pairs(_G.PeaversConfigDB.characters or {}) do
+        if state.activeProfile == name then state.activeProfile = nil end
     end
     print("|cff00ff00PeaversConfig:|r Deleted profile: " .. name)
     return true
@@ -183,13 +238,15 @@ function EcosystemProfiles:SwitchProfile(name)
         _G.PeaversConfigDB.ecosystemProfiles = {}
     end
 
-    _G.PeaversConfigDB.activeEcosystemProfile = name
+    SetActiveProfile(name)
     print("|cff00ff00PeaversConfig:|r Switched to profile: " .. name)
     return true
 end
 
+-- Brings an addon installed since this character last picked a profile onto
+-- that profile. Only this character's own pick counts.
 function EcosystemProfiles:ApplyActiveProfileOnLogin()
-    local activeProfile = self:GetActiveProfile()
+    local activeProfile = self:GetCharacterState().activeProfile
     if not activeProfile then return end
 
     local registry = _G.PeaversCommons and _G.PeaversCommons.ConfigRegistry
@@ -234,7 +291,7 @@ function EcosystemProfiles:SetupSpecAutoSwitch()
 end
 
 function EcosystemProfiles:CheckSpecAutoSwitch()
-    local specConfig = _G.PeaversConfigDB and _G.PeaversConfigDB.specAutoSwitch
+    local specConfig = _G.PeaversConfigDB and self:GetSpecConfig()
     if not specConfig or not specConfig.enabled then return end
 
     local specIndex = GetSpecialization and GetSpecialization()
@@ -243,7 +300,7 @@ function EcosystemProfiles:CheckSpecAutoSwitch()
     local profileName = specConfig.specProfiles and specConfig.specProfiles[specIndex]
     if not profileName or profileName == "" then return end
 
-    local current = self:GetActiveProfile() or (UnitName("player") .. " - " .. GetRealmName())
+    local current = self:GetActiveProfile() or CharacterKey()
     if profileName == current then return end
 
     -- Verify profile exists
