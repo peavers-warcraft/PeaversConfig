@@ -65,6 +65,7 @@ local function Login(character, opts)
     end
     for _, name in ipairs(SAVED) do _G[name] = account[name] end
 
+    ---@diagnostic disable: duplicate-set-field
     _G.print = function() end
     _G.strmatch = string.match
     _G.GetLocale = function() return "enUS" end
