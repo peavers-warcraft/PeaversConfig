@@ -56,6 +56,7 @@ local inCombat = false
 local printed = {}
 
 local function StubGame()
+    ---@diagnostic disable: duplicate-set-field
     _G.print = function(...) local t = {} for i = 1, select("#", ...) do t[#t + 1] = tostring(select(i, ...)) end printed[#printed + 1] = table.concat(t, " ") end
     _G.strmatch = string.match
     _G.GetLocale = function() return "enUS" end
